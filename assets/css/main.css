@@ -1,0 +1,72 @@
+/*===================== Globales ==============*/
+
+@import url('https://fonts.googleapis.com/css2?family=Monserrat&display=swap');
+
+body {
+    font-family: 'Monserrat', sans-serif;
+    overflow-x: hidden;
+}
+
+/*====================MENU=====================*/
+#menu li>a {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3f3f3f;
+}
+
+#menu li>a:hover {
+    color: #0d6efd;
+}
+
+/*====================SLIDER DE IMAGENES=====================*/
+.carousel-inner {
+    max-height: 39rem !important;
+}
+
+/*=========================FOOTER================================*/
+
+footer {
+    background: #1b2a4e;
+    min-height: 100px;
+    ;
+}
+
+footer p {
+    color: #f3f3f3;
+    text-align: center;
+}
+
+#iconos i {
+    font-size: 26px;
+    padding: 0 8px;
+    color: #f3f3f3;
+}
+
+/*=========================MEDIA QUERIES PANTALLA ANCHA================================*/
+
+@media (max-width:1200px) {
+    #intro, #equipo {
+        width: 90% !important;
+        margin: auto;
+    }
+}
+
+/*===============MEDIA QUERIES PANTALLA SM===================*/
+@media (max-width:768px) {
+    #intro, #equipo {
+        width: 90% !important;
+        margin: auto;
+    }
+
+    #equipo p {
+        display: none;
+    }
+}
+
+/*===============MEDIA QUERIES PANTALLA EXTRA-SM===================*/
+@media (max-width:576px) {
+    .icono-wrap {
+        flex-wrap: wrap;
+        justify-content: center !important;
+    }
+}
