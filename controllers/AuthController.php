@@ -1,51 +1,73 @@
 <?php
-require_once 'models/Usuario.php';
-require_once 'config/Database.php';
 
-class AuthController extends BaseController {
+class AuthController extends BaseController
+{
 
+    private $rolModelo;
+    private $usuarioModelo;
     private $institucionModelo;
 
     public function __construct()
     {
         parent::__construct();
+        $this->rolModelo = $this->model('rol');
+        $this->usuarioModelo = $this->model('usuario');
         $this->institucionModelo = $this->model('institucion');
     }
 
     // Muestra la vista de login de AdminLTE 4
-    public function index() {
+    public function index()
+    {
         if (isset($_SESSION['user_id'])) {
             header("Location: /dashboard");
             exit();
         }
 
+        $roles = $this->rolModelo->obtenerRoles();
         $institucion = $this->institucionModelo->obtenerInstitucion(1);
 
         $data = [
             'tituloPagina' => '| Login',
+            'roles' => $roles,
             'institucion' => $institucion
         ];
 
         $this->view('auth/login', $data);
     }
 
-    // Procesa la petición AJAX del formulario
-    /*public function login() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $db = (new Database())->getConnection();
-            $email = $_POST['email'] ?? '';
-            $password = $_POST['password'] ?? '';
+    // Muestra la vista de register de AdminLTE4
+    public function showViewRegister()
+    {
+        $institucion = $this->institucionModelo->obtenerInstitucion(1);
 
-            $userModel = new Usuario($db);
-            $usuario = $userModel->buscarPorEmail($email);
+        $data = [
+            'tituloPagina' => '| Register',
+            'institucion' => $institucion
+        ];
+
+        $this->view('auth/register', $data);
+    }
+
+    // Procesa la petición AJAX del formulario
+    public function login()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Collect data POST
+            $username = $_POST["usuario"];
+            $password = $_POST["clave"];
+            $id_perfil = $_POST["perfil"];
+
+            $usuario = $this->usuarioModelo->buscarPorUsername($username);
+
+            // echo json_encode($usuario);
 
             if ($usuario && password_verify($password, $usuario['password'])) {
-                session_start();
+                /*session_start();
                 $_SESSION['user_id'] = $usuario['id'];
                 $_SESSION['nombre']  = $usuario['nombre'];
-                
+
                 // Cargamos los permisos del usuario usando sus múltiples roles
-                $_SESSION['permisos'] = $userModel->obtenerPermisos($usuario['id']);
+                $_SESSION['permisos'] = $this->usuarioModelo->obtenerPermisos($usuario['id']);*/
 
                 echo json_encode(['status' => 'success', 'message' => 'Bienvenido']);
             } else {
@@ -53,9 +75,10 @@ class AuthController extends BaseController {
             }
             exit();
         }
-    }*/
+    }
 
-    public function logout() {
+    public function logout()
+    {
         session_start();
         session_destroy();
         header("Location: /login");

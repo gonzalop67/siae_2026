@@ -22,7 +22,7 @@
 
 <body class="login-page bg-body-secondary">
     <div class="login-box">
-        <div class="card card-outline card-primary">
+        <div class="card card-outline card-danger">
             <div class="card-header">
                 <a href="<?= $institucion->url ?>"
                     class="link-dark text-center link-offset-2 link-opacity-100 link-opacity-50-hover">
@@ -31,53 +31,60 @@
             </div>
 
             <div class="card-body login-card-body">
-                <p class="login-box-msg">Introduzca sus datos de ingreso</p>
+                <p class="login-box-msg">Introduzca sus datos de registro</p>
 
                 <div id="mensaje">
-                    <!-- Aqui van los mensajes de error -->
+                    <!-- Aqui van los mensajes de error o de éxito -->
                 </div>
 
-                <form id="form-login" autocomplete="off">
+                <form id="form-register" autocomplete="off">
                     <div class="form-floating mb-1">
-                        <input class="form-control" id="usuario" name="usuario" type="text" placeholder="Ingrese usuario" autocomplete="username">
+                        <input class="form-control" id="usuario" name="usuario" type="text" placeholder="Ingrese usuario">
                         <label for="usuario"><i class="bi bi-person-fill-lock"></i> Usuario</label>
                         <p id="error-usuario" class="invalid-feedback"></p>
                     </div>
 
                     <div class="form-floating mb-1">
-                        <input class="form-control" id="clave" name="clave" type="password" placeholder="Ingrese contraseña" autocomplete="current-password">
+                        <input class="form-control" id="email" name="email" type="email" placeholder="Ingrese email">
+                        <label for="email"><i class="bi bi-envelope-at-fill"></i> Email</label>
+                        <p id="error-email" class="invalid-feedback"></p>
+                    </div>
+
+                    <div class="form-floating mb-1">
+                        <input class="form-control" id="clave" name="clave" type="password" placeholder="Ingrese contraseña">
                         <label for="clave"><i class="bi bi-key-fill"></i> Contraseña</label>
                         <p id="error-clave" class="invalid-feedback"></p>
                     </div>
 
-                    <div class="form-floating mb-3">
-                        <select class="form-select" name="perfil" id="perfil">
-                            <option value="">Seleccione...</option>
-                            <!-- Aquí van los perfiles -->
-                            <?php foreach ($roles as $rol) : ?>
-                                <option value="<?php echo $rol->id; ?>"><?php echo $rol->nombre_rol; ?></option>
-                            <?php endforeach ?>
-                        </select>
-                        <label for="perfil"><i class="bi bi-person-fill-gear"></i></i> Perfil</label>
-                        <p id="error-perfil" class="invalid-feedback"></p>
+                    <div class="form-floating mb-1">
+                        <input class="form-control" id="confirmar_clave" name="confirmar_clave" type="password" placeholder="Ingrese confirmación de contraseña">
+                        <label for="confirmar_clave"><i class="bi bi-key-fill"></i> Confirmar Contraseña</label>
+                        <p id="error-confirmar_clave" class="invalid-feedback"></p>
                     </div>
 
                     <!-- begin::Row -->
                     <div class="row">
                         <div class="col-12">
                             <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary">Ingresar</button>
+                                <button type="submit" class="btn btn-danger">Registrar</button>
                             </div>
                         </div>
                         <!-- /.col -->
                     </div>
                     <!-- end::Row -->
                 </form>
+
+                <div id="img_loader" class="text-center mt-2">
+                    <!-- Aqui va el gif animado que representa el loader -->
+                </div>
             </div>
+
             <!-- /.login-card-body -->
-            
             <div class="card-footer text-center">
                 <?= $institucion->nombre ?>
+                <p class="mb-0">
+                    <a href="<?= RUTA_URL ?>auth">Ya tengo una cuenta</a>
+                </p>
             </div>
         </div>
     </div>
@@ -88,13 +95,14 @@
     <script>
         const base_url = "<?php echo RUTA_URL; ?>";
         const usuario = document.getElementById("usuario");
+        const email = document.getElementById("email");
         const clave = document.getElementById("clave");
-        const perfil = document.getElementById("perfil");
+        const confirmar_clave = document.getElementById("confirmar_clave");
 
-        $('#form-login').submit(function(e) {
+        $('#form-register').submit(function(e) {
             e.preventDefault();
-            if (usuario.value == "" || clave.value == "" || perfil.value == "") {
-                if (usuario.value == "") {
+            if (usuario.value.trim() == "" || email.value.trim() == "" || clave.value.trim() == "" || confirmar_clave.value.trim() == "") {
+                if (usuario.value.trim() == "") {
                     usuario.classList.add("is-invalid");
                     document.getElementById("error-usuario").innerHTML = "El campo Usuario es obligatorio.";
                 } else {
@@ -102,7 +110,15 @@
                     document.getElementById("error-usuario").innerHTML = "";
                 }
 
-                if (clave.value == "") {
+                if (email.value.trim() == "") {
+                    email.classList.add("is-invalid");
+                    document.getElementById("error-email").innerHTML = "El campo Email es obligatorio.";
+                } else {
+                    email.classList.remove("is-invalid");
+                    document.getElementById("error-email").innerHTML = "";
+                }
+
+                if (clave.value.trim() == "") {
                     clave.classList.add("is-invalid");
                     document.getElementById("error-clave").innerHTML = "El campo Contraseña es obligatorio.";
                 } else {
@@ -110,23 +126,36 @@
                     document.getElementById("error-clave").innerHTML = "";
                 }
 
-                if (perfil.value == "") {
-                    perfil.classList.add("is-invalid");
-                    document.getElementById("error-perfil").innerHTML = "El campo Perfil es obligatorio.";
+                if (confirmar_clave.value.trim() == "") {
+                    confirmar_clave.classList.add("is-invalid");
+                    document.getElementById("error-confirmar_clave").innerHTML = "El campo Confirmar Contraseña es obligatorio.";
                 } else {
-                    perfil.classList.remove("is-invalid");
-                    document.getElementById("error-perfil").innerHTML = "";
+                    confirmar_clave.classList.remove("is-invalid");
+                    document.getElementById("error-confirmar_clave").innerHTML = "";
                 }
             } else {
                 // Eliminar todos los mensajes de error
                 usuario.classList.remove("is-invalid");
                 document.getElementById("error-usuario").innerHTML = "";
+                email.classList.remove("is-invalid");
+                document.getElementById("error-email").innerHTML = "";
                 clave.classList.remove("is-invalid");
                 document.getElementById("error-clave").innerHTML = "";
-                perfil.classList.remove("is-invalid");
-                document.getElementById("error-perfil").innerHTML = "";
+                confirmar_clave.classList.remove("is-invalid");
+                document.getElementById("error-confirmar_clave").innerHTML = "";
+                // Confirmar si la clave y su confirmación coinciden
+                if (clave.value.trim() !== confirmar_clave.value.trim()) {
+                    var mensaje = `
+                    <div class='alert alert-danger'>
+                    La Contraseña y Confirmación no coinciden.
+                    </div>
+                    `;
+                    document.getElementById("mensaje").innerHTML = mensaje;
+                } else {
+                    document.getElementById("img_loader").innerHTML = "<img src='"+base_url+"assets/img/ajax-loader5.GIF' alt='image loader'>";
+                }
             }
-            $.ajax({
+            /*$.ajax({
                 url: '<?php echo RUTA_URL ?>auth/login', // Ruta amigable al método del controlador
                 type: 'POST',
                 data: $(this).serialize(),
@@ -136,9 +165,9 @@
                         window.location.href = '/dashboard';
                     } else {
                         Swal.fire('Error', 'Usuario o contraseña incorrectos', 'error');
-                    }*/
+                    }
                 }
-            });
+            });*/
         });
     </script>
 </body>

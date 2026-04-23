@@ -36,9 +36,13 @@ class BaseController {
             extract($data);
         }
 
+        $view = str_replace('.', '/', $view);
+
         $filename = "views/" . $view . ".php";
         if (file_exists($filename)) {
             require $filename;
+        } else {
+            return "El archivo no existe";
         }
     }
 

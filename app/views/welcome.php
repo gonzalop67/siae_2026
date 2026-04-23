@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIAE Web</title>
     <!-- Bootstrap CSS -->
-    <link href="<?= RUTA_URL; ?>assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="<?= baseurl(); ?>/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <!-- Bootstrap icons -->
-    <link rel="stylesheet" href="<?= RUTA_URL; ?>assets/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="<?= baseurl(); ?>/assets/bootstrap-icons/font/bootstrap-icons.css">
 
-    <link rel="stylesheet" href="<?= RUTA_URL; ?>assets/css/main.css">
+    <link rel="stylesheet" href="<?= baseurl(); ?>/assets/css/main.css">
 </head>
 <body>
     <!-- ==================================== -->
     <!-- ENCABEZADO -->
     <!-- ==================================== -->
     <header class="container-fluid bg-primary d-flex justify-content-center">
-        <p class="text-light mb-0 p-2 fs-6">Contáctanos 593-022-256311</p>
+        <p class="text-light mb-0 p-2 fs-6">Contáctanos 593 022 256311</p>
     </header>
 
     <nav class="navbar navbar-expand-lg bg-body-tertiary p-3" id="menu">
@@ -38,10 +38,10 @@
                 </ul>
                 <ul class="nav justify-content-end">
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= RUTA_URL . 'auth' ?>">Iniciar Sesión</a>
+                        <a class="nav-link" href="<?= baseurl() . '/auth' ?>">Iniciar Sesión</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Regístrate</a>
+                        <a class="nav-link" href="<?= baseurl() . '/auth' ?>/showViewRegister">Regístrate</a>
                     </li>
                 </ul>
             </div>
@@ -138,6 +138,6 @@
     </footer>
 
     <!-- Option 1: Bootstrap Bundle with Popper -->
-    <script src="<?= RUTA_URL; ?>assets/bootstrap/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="<?= baseurl(); ?>/assets/bootstrap/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 </body>
 </html>
