@@ -1,0 +1,13 @@
+# Visual Studio Code
+.vscode/
+
+# Directorio de imágenes subidas
+public/uploads/
+
+# Directorio de caché
+cache/
+
+# Directorio de archivos de configuración
+App/config
+
+.git/

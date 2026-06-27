@@ -71,10 +71,10 @@ class Permiso extends Model
 
     public function getPermissionIds(string $rolId)
     {
-        $sql = "SELECT id_permiso FROM sw_perfil_permiso WHERE id_perfil = ?";
+        $sql = "SELECT permiso_id FROM roles_permisos WHERE rol_id = ?";
         $data = $this->query($sql, [$rolId])->get();
 
         // Aquí es donde simulamos el pluck('id')->toArray()
-        return array_column($data, 'id_permiso');
+        return array_column($data, 'permiso_id');
     }
 }

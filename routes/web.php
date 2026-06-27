@@ -4,6 +4,7 @@
 
 use App\Controllers\Admin\AdminDashboardController;
 use App\Controllers\Admin\PermisoController;
+use App\Controllers\Admin\RoleController;
 use App\Controllers\AuthController;
 
 use Core\Route;
@@ -30,5 +31,21 @@ Route::post('permissions/:id/destroy', [PermisoController::class, 'destroy'], [$
 Route::get('permissions/:id/edit', [PermisoController::class, 'edit'], [$authMiddleware]);
 Route::post('permissions/:id/update', [PermisoController::class, 'update'], [$authMiddleware]);
 Route::post('permissions/:id/delete', [PermisoController::class, 'delete'], [$authMiddleware]);
+
+/** Rutas para Roles */
+Route::get('/roles', [RoleController::class, 'index'], [$authMiddleware]);
+Route::get('/roles/create', [RoleController::class, 'create'], [$authMiddleware]);
+Route::post('/roles', [RoleController::class, 'store'], [$authMiddleware]);
+// Ver el listado de la papelera (GET)
+Route::get('/roles/wastebasket', [RoleController::class, 'wastebasket'], [$authMiddleware]);
+Route::post('/roles/:id/restore', [RoleController::class, 'restore'], [$authMiddleware]);
+Route::post('/roles/:id/destroy', [RoleController::class, 'destroy'], [$authMiddleware]);
+// Rutas comunes
+Route::get('/roles/:id/edit', [RoleController::class, 'edit'], [$authMiddleware]);
+Route::post('/roles/:id/update', [RoleController::class, 'update'], [$authMiddleware]);
+Route::get('/roles/:id/permissions', [RoleController::class, 'permissions'], [$authMiddleware]);
+Route::post('/roles/:id/permissions', [RoleController::class, 'updatePermissions'], [$authMiddleware]);
+// Ruta para la eliminación "suave"
+Route::post('/roles/:id/delete', [RoleController::class, 'delete'], [$authMiddleware]);
 
 Route::dispatch();
