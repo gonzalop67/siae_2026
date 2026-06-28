@@ -34,16 +34,22 @@ if (!$command) {
     echo "Uso:\n";
     echo "  php craft make:controller {Nombre} [-r] [-m]\n";
     echo "  php craft make:model {Nombre} [-m] [-c] [-r]\n";
-    echo "  php craft make:migration create_{nombre}_table [--create=tabla]\n";
+    echo "  php craft make:migration {nombre} [--create=tabla] [--table=tabla]\n";
     echo "  php craft make:seeder {Nombre}\n";
-    echo "  php craft migrate\n";
-    echo "  php craft migrate:rollback\n";
+    echo "  php craft make:crud {nombre_tabla}\n\n";
+    
+    echo "\e[36mComandos de Base de Datos:\e[0m\n";
+    echo "  php craft migrate             Ejecuta las migraciones pendientes.\n";
+    echo "  php craft migrate:rollback    Revierte el último lote de migraciones aplicado.\n";
+    echo "  php craft migrate:refresh     Borra todo el esquema y vuelve a ejecutar las migraciones.\n";
     echo "  php craft db:seed [{Nombre}] [--refresh]\n\n";
-    echo "  php craft make:crud {nombre_tabla}\n";
-    echo "Opciones y Banderas:\n";
+    
+    echo "\e[36mOpciones y Banderas:\e[0m\n";
     echo "  -m, --model       Genera un modelo acoplado (al crear controlador) o migración (al crear modelo).\n";
     echo "  -c, --controller  Genera un controlador básico acoplado al modelo.\n";
     echo "  -r, --resource    Genera un controlador estructurado tipo Recurso (CRUD).\n";
+    echo "  --create=tabla    Especifica el nombre de la tabla a crear en la migración.\n";
+    echo "  --table=tabla     Especifica una tabla existente para alterar su estructura (ALTER TABLE).\n";
     echo "  --refresh         Vacía las tablas mediante TRUNCATE antes de ejecutar los seeders.\n";
     exit(0);
 }
@@ -51,41 +57,54 @@ if (!$command) {
 // ==========================================
 // FUNCIONES AUXILIARES DE GENERACIÓN
 // ==========================================
-function generarMigración($name, $forcedTableName = null) {
+function generarMigración($name, $forcedTableName = null, $action = 'create') {
     if (!is_dir(MIGRATIONS_PATH)) {
         mkdir(MIGRATIONS_PATH, 0755, true);
     }
     
-    // 1. Si se pasó una tabla por la bandera --create, la usamos directamente.
-    // De lo contrario, sanitizamos el nombre de la migración.
+    // 1. Resolver el nombre limpio de la tabla destino
     if ($forcedTableName) {
         $pureName = strtolower($forcedTableName);
     } else {
-        $pureName = str_replace(['create_', '_table'], '', strtolower($name));
-        
-        // 2. PLURALIZACIÓN INTELIGENTE NATIVA (Tu lógica existente)
-        if (!str_ends_with($pureName, 's')) {
-            $pureName .= 's';
+        if ($action === 'alter') {
+            // Limpieza nativa para alteraciones: add_telefono_to_sw_persona -> sw_persona
+            $pureName = preg_replace('/^(add|remove|alter)_.*_(to|in)_/', '', strtolower($name));
+            $pureName = str_replace('_table', '', $pureName);
+        } else {
+            $pureName = str_replace(['create_', '_table'], '', strtolower($name));
+            
+            // 2. PLURALIZACIÓN INTELIGENTE NATIVA (Solo para creación de tablas)
+            if (!str_ends_with($pureName, 's')) {
+                $pureName .= 's';
+            }
         }
     }
     
-    // 3. Estandarizar el nombre del archivo y de la tabla (ej: create_ofertas_educativas_table)
-    $migrationName = 'create_' . str_replace(['create_', '_table'], '', strtolower($name)) . '_table';
+    // 3. Estandarizar el nombre del archivo según la acción
+    if ($action === 'alter') {
+        $migrationName = strtolower($name);
+        $stubFile = STUBS_PATH . 'AlterMigration.stub';
+    } else {
+        $migrationName = 'create_' . str_replace(['create_', '_table'], '', strtolower($name)) . '_table';
+        $stubFile = STUBS_PATH . 'Migration.stub';
+    }
+    
     $tableName = $pureName;
     
-    // 4. Convertir a CamelCase para la Clase (ej: CreateOfertasEducativasTable)
+    // 4. Convertir a CamelCase para la Clase (ej: AddTelefonoToSwPersonaTable)
     $className = str_replace(' ', '', ucwords(str_replace('_', ' ', $migrationName)));
 
     $timestamp = date('Y_m_d_His');
     $filename = $timestamp . '_' . $migrationName . '.php';
     $targetFile = MIGRATIONS_PATH . $filename;
 
-    if (!file_exists(STUBS_PATH . 'Migration.stub')) {
-        echo "\e[31mError:\e[0m Falta plantilla Migration.stub\n";
+    // Verificar que el stub correspondiente exista
+    if (!file_exists($stubFile)) {
+        echo "\e[31mError:\e[0m Falta plantilla " . basename($stubFile) . "\n";
         return;
     }
 
-    $template = file_get_contents(STUBS_PATH . 'Migration.stub');
+    $template = file_get_contents($stubFile);
     $compiled = str_replace(['{{MigrationClass}}', '{{TableName}}'], [$className, $tableName], $template);
     
     file_put_contents($targetFile, $compiled);
@@ -152,7 +171,6 @@ function generarControlador($name, $isResource, $descomentarCrud = false) {
     echo "\e[32mControlador creado con éxito:\e[0m App/Controllers/{$name}.php\n";
 }
 
-
 function generarModelo($name) {
     // 1. Limpiar barras y separar el nombre de la clase de las subcarpetas
     $name = trim(str_replace('\\', '/', $name), '/');
@@ -204,7 +222,6 @@ function generarModelo($name) {
     echo "\e[32mModelo creado con éxito:\e[0m App/Models/{$name}.php (Tabla: {$tableName})\n";
 }
 
-
 // ==========================================
 // COMANDO: php craft make:migration
 // ==========================================
@@ -215,21 +232,34 @@ if ($command === 'make:migration') {
     }
 
     $tableName = null;
+    $action = 'create'; // Acción por defecto
 
-    // Analizar las banderas buscando --create=tabla
+    // Analizar las banderas buscando --create o --table
     foreach ($flags as $flag) {
         if (str_starts_with($flag, '--create=')) {
-            $tableName = substr($flag, 9); // Extrae lo que esté después de '--create='
+            $tableName = substr($flag, 9);
+            $action = 'create';
+        } elseif (str_starts_with($flag, '--table=')) {
+            $tableName = substr($flag, 8); // Extrae lo que esté después de '--table='
+            $action = 'alter';
         }
     }
 
-    // Si no se usó la bandera --create, lo extraemos del nombre de la migración de forma nativa
+    // Si no se usaron banderas, intentamos deducir la tabla y la acción de forma nativa por el nombre
     if (!$tableName) {
-        $tableName = str_replace(['create_', '_table'], '', $name);
+        if (str_contains($name, 'add_') || str_contains($name, 'to_')) {
+            $action = 'alter';
+            // Limpia prefijos y sufijos comunes de alteración (ej: add_telefono_to_sw_persona -> sw_persona)
+            $tableName = preg_replace('/^(add|remove|alter)_.*_(to|in)_/', '', $name);
+            $tableName = str_replace('_table', '', $tableName);
+        } else {
+            $action = 'create';
+            $tableName = str_replace(['create_', '_table'], '', $name);
+        }
     }
 
-    // Llamamos a la función pasando el nombre de la migración y la tabla limpia
-    generarMigración($name, $tableName);
+    // Pasamos el nombre, la tabla y el tipo de acción (create/alter) a la función
+    generarMigración($name, $tableName, $action);
     exit(0);
 }
 
@@ -237,7 +267,7 @@ if ($command === 'make:migration') {
 // COMANDO: php craft migrate
 // ==========================================
 if ($command === 'migrate') {
-    mysqli_report(MYSQLI_REPORT_OFF);
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
     if ($mysqli->connect_error) {
@@ -301,6 +331,18 @@ if ($command === 'migrate') {
             }
             $migrationInstance->up();
 
+            // ================================================================
+            // DESACTIVAR RESTRICCIONES TEMPORALMENTE PARA EL CREATE TABLE
+            // ================================================================
+            $mysqli->query("SET FOREIGN_KEY_CHECKS = 0;");
+
+            // Ejecuta el up() de la migración de forma segura
+            $migrationInstance->up();
+
+            // REACTIVAR LAS RESTRICCIONES INMEDIATAMENTE
+            $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
+            // ================================================================
+
             // Modificado: Guardamos el archivo y le asociamos el lote ($currentBatch)
             $stmt = $mysqli->prepare("INSERT INTO migrations (migration, batch) VALUES (?, ?)");
             $stmt->bind_param('si', $file, $currentBatch);
@@ -320,7 +362,7 @@ if ($command === 'migrate') {
 // COMANDO: php craft migrate:rollback
 // ==========================================
 if ($command === 'migrate:rollback') {
-    mysqli_report(MYSQLI_REPORT_OFF);
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
     if ($mysqli->connect_error) {
@@ -375,9 +417,22 @@ if ($command === 'migrate:rollback') {
                 if (method_exists($migrationInstance, 'connection')) {
                     $migrationInstance->connection();
                 }
+
+                // ================================================================
+                // DESACTIVAR RESTRICCIONES TEMPORALMENTE PARA EL DROP/ALTER TABLE
+                // ================================================================
+                $mysqli->query("SET FOREIGN_KEY_CHECKS = 0;");
+
                 $migrationInstance->down(); // Ejecuta el borrado/modificación de la tabla
+
+                // REACTIVAR LAS RESTRICCIONES INMEDIATAMENTE
+                $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
+                // ================================================================
+
                 echo "\e[33mRevertido:\e[0m {$file}\n";
             } catch (\Throwable $e) {
+                // Asegurar que las restricciones queden activas si algo falla críticamente
+                $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
                 echo "\e[31mError revirtiendo {$file}:\e[0m " . $e->getMessage() . "\n";
                 exit(1);
             }
@@ -393,6 +448,139 @@ if ($command === 'migrate:rollback') {
     $stmt->close();
 
     echo "\e[32mSe revirtió con éxito el lote [{$lastBatch}] ({$rolledBackCount} migraciones).\e[0m\n";
+    exit(0);
+}
+
+// ==========================================
+// COMANDO: php craft migrate:refresh
+// ==========================================
+if ($command === 'migrate:refresh') {
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+
+    if ($mysqli->connect_error) {
+        die("\e[31mError de conexión a la BD:\e[0m " . $mysqli->connect_error . "\n");
+    }
+    $mysqli->set_charset('utf8mb4');
+
+    echo "\e[33mIniciando el refresco de la base de datos...\e[0m\n";
+
+    // 1. PASO 1: REVERTIR ABSOLUTAMENTE TODO EL HISTORIAL (ROLLBACK COMPLETO)
+    $tableCheck = $mysqli->query("SHOW TABLES LIKE 'migrations'");
+    if ($tableCheck->num_rows > 0) {
+        // Seleccionamos todas las migraciones registradas en orden estrictamente descendente
+        $result = $mysqli->query("SELECT id, migration FROM migrations ORDER BY id DESC");
+        
+        if ($result && $result->num_rows > 0) {
+            echo "\e[36mRevirtiendo todas las migraciones existentes...\e[0m\n";
+            
+            // Desactivar restricciones de llaves foráneas para evitar bloqueos al borrar tablas
+            $mysqli->query("SET FOREIGN_KEY_CHECKS = 0;");
+
+            while ($row = $result->fetch_assoc()) {
+                $file = $row['migration'];
+                $migrationId = $row['id'];
+                $filePath = MIGRATIONS_PATH . $file;
+
+                if (file_exists($filePath)) {
+                    require_once $filePath;
+                    $pureName = preg_replace('/^[0-9_]+/', '', pathinfo($file, PATHINFO_FILENAME));
+                    $className = str_replace(' ', '', ucwords(str_replace('_', ' ', $pureName)));
+
+                    try {
+                        if (class_exists($className)) {
+                            $migrationInstance = new $className();
+                            if (method_exists($migrationInstance, 'connection')) {
+                                $migrationInstance->connection();
+                            }
+                            $migrationInstance->down(); // Ejecuta el DROP TABLE o ALTER TABLE DROP
+                            echo "  \e[33m✔ Deshecho:\e[0m {$file}\n";
+                        }
+                    } catch (\Throwable $e) {
+                        $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
+                        echo "\e[31mError revirtiendo {$file} durante el refresh:\e[0m " . $e->getMessage() . "\n";
+                        exit(1);
+                    }
+                }
+                
+                // Eliminar el registro de control uno a uno
+                $deleteStmt = $mysqli->prepare("DELETE FROM migrations WHERE id = ?");
+                $deleteStmt->bind_param('i', $migrationId);
+                $deleteStmt->execute();
+                $deleteStmt->close();
+            }
+            
+            // Reactivar validaciones de integridad de MySQL
+            $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
+        }
+    }
+
+    // 2. PASO 2: EJECUTAR TODAS LAS MIGRACIONES DESDE CERO
+    if (!is_dir(MIGRATIONS_PATH)) {
+        echo "\e[33mNo se encontró la carpeta de migraciones para volver a compilar.\e[0m\n";
+        exit(0);
+    }
+
+    $files = scandir(MIGRATIONS_PATH);
+    $allMigrations = [];
+
+    foreach ($files as $file) {
+        if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+            $allMigrations[] = $file;
+        }
+    }
+
+    if (empty($allMigrations)) {
+        echo "\e[32mBase de datos vaciada, pero no hay archivos PHP para migrar.\e[0m\n";
+        exit(0);
+    }
+
+    // Ordenar cronológicamente ascendente para asegurar la jerarquía de creación
+    sort($allMigrations);
+    echo "\e[36mReejecutando todas las migraciones en un lote limpio (Lote 1)...\e[0m\n";
+
+    // Al ser un refresh total, todas las tablas e instrucciones entran en el Batch número 1
+    $currentBatch = 1; 
+
+    foreach ($allMigrations as $file) {
+        require_once MIGRATIONS_PATH . $file;
+        $pureName = preg_replace('/^[0-9_]+/', '', pathinfo($file, PATHINFO_FILENAME));
+        $className = str_replace(' ', '', ucwords(str_replace('_', ' ', $pureName)));
+
+        echo "  Migrando: {$file}...\n";
+
+        try {
+            if (!class_exists($className)) {
+                throw new \Exception("La clase [{$className}] no está definida.");
+            }
+
+            $migrationInstance = new $className();
+            if (method_exists($migrationInstance, 'connection')) {
+                $migrationInstance->connection();
+            }
+
+            // Desactivar llaves foráneas para mitigar cualquier error de orden jerárquico involuntario
+            $mysqli->query("SET FOREIGN_KEY_CHECKS = 0;");
+            
+            $migrationInstance->up(); // Ejecuta el CREATE TABLE o ALTER TABLE ADD
+            
+            $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
+
+            // Registrar en la tabla de control bajo el Lote 1
+            $stmt = $mysqli->prepare("INSERT INTO migrations (migration, batch) VALUES (?, ?)");
+            $stmt->bind_param('si', $file, $currentBatch);
+            $stmt->execute();
+            $stmt->close();
+
+            echo "  \e[32m✔ Migrado:\e[0m {$file}\n";
+        } catch (\Throwable $e) {
+            $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
+            echo "\e[31mError migrando {$file} durante el refresh:\e[0m " . $e->getMessage() . "\n";
+            exit(1);
+        }
+    }
+
+    echo "\e[32m¡Base de datos restablecida y actualizada con éxito!\e[0m\n";
     exit(0);
 }
 
@@ -510,7 +698,7 @@ if ($command === 'make:seeder') {
 // COMANDO: php craft db:seed {Nombre opcional} [--refresh]
 // ==========================================
 if ($command === 'db:seed') {
-    mysqli_report(MYSQLI_REPORT_OFF);
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
     $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
     if ($mysqli->connect_error) {
@@ -527,16 +715,14 @@ if ($command === 'db:seed') {
     $shouldRefresh = in_array('--refresh', $flags) || in_array('-r', $flags);
 
     // 🔥 ESCUDO DE SEGURIDAD PARA PRODUCCIÓN
-    // Nota: Reemplaza 'ENVIRONMENT' o 'production' por las constantes reales de tu App/config/config.php si difieren.
     $isProduction = (defined('ENVIRONMENT') && ENVIRONMENT === 'production') || (defined('DB_HOST') && DB_HOST !== 'localhost' && DB_HOST !== '127.0.0.1');
 
     if ($shouldRefresh && $isProduction) {
         echo "\n\e[41m  ¡ADVERTENCIA CRÍTICA DE SEGURIDAD!  \e[0m\n";
         echo "\e[31mEstás intentando ejecutar un --refresh en un entorno de PRODUCCIÓN.\e[0m\n";
         echo "\e[31mEsta acción ELIMINARÁ permanentemente todos los datos de las tablas afectadas.\e[0m\n\n";
-        echo "¿Estás completamente seguro de continuar? (Escribe 'si' en mayúscula o minúscula para confirmar): ";
+        echo "¿Estás completamente seguro de continuar? (Escribe 'si' para confirmar): ";
         
-        // Abrir la entrada de la terminal para capturar la respuesta del usuario
         $handle = fopen("php://stdin", "r");
         $line = trim(fgets($handle));
         fclose($handle);
@@ -548,61 +734,59 @@ if ($command === 'db:seed') {
         echo "\n\e[33mContinuando con el vaciado de tablas bajo tu propia responsabilidad...\e[0m\n\n";
     }
 
-    // Si especificas un seeder concreto (ej: php craft db:seed UserSeeder)
+    // =========================================================================
+    // CASO A: Si el usuario especifica un seeder concreto (ej: php craft db:seed RolSeeder)
+    // =========================================================================
     if ($name && !str_starts_with($name, '-')) {
         if (!str_ends_with($name, 'Seeder')) {
             $name .= 'Seeder';
         }
-        $files = [$name . '.php'];
-    } else {
-        // Si no especificas nombre o pasas la bandera directamente, ejecuta todos
-        $files = array_filter(scandir(SEEDERS_PATH), function($file) {
-            return pathinfo($file, PATHINFO_EXTENSION) === 'php';
-        });
-    }
-
-    if (empty($files) || !file_exists(SEEDERS_PATH . reset($files))) {
-        echo "\e[33mNo se encontraron archivos de seeders para ejecutar.\e[0m\n";
-        exit(0);
-    }
-
-    foreach ($files as $file) {
+        $file = $name . '.php';
         $filePath = SEEDERS_PATH . $file;
+
         if (!file_exists($filePath)) {
             echo "\e[31mArchivo no encontrado:\e[0m {$file}\n";
-            continue;
+            exit(1);
         }
 
         require_once $filePath;
-        $className = pathinfo($file, PATHINFO_FILENAME);
-
-        // EXTRAER NOMBRE DE TABLA AUTOMÁTICO: Convierte "UserSeeder" a "users"
-        $baseTableName = strtolower(str_replace('Seeder', '', $className)) . 's';
-
-        // Si se solicita refrescar, vaciamos la tabla antes del Seed
-        if ($shouldRefresh) {
-            echo "\e[33mLimpiando tabla [{$baseTableName}]...\e[0m\n";
-            $mysqli->query("SET FOREIGN_KEY_CHECKS = 0;"); // Desactiva restricciones temporalmente
-            $mysqli->query("TRUNCATE TABLE {$baseTableName}");
-            $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;"); // Reactiva restricciones
-        }
-
-        echo "Ejecutando Seeder: {$className}...\n";
-
+        
+        echo "Ejecutando Seeder Individual: {$name}...\n";
         try {
-            if (!class_exists($className)) {
-                throw new \Exception("La clase [{$className}] no está definida en el archivo.");
-            }
-
-            $seederInstance = new $className();
+            $seederInstance = new $name();
             $seederInstance->run($mysqli);
-
-            echo "\e[32mSeeded:\e[0m {$file}\n";
+            echo "\e[32m✔ Seeded individual completado con éxito.\e[0m\n";
         } catch (\Exception $e) {
             echo "\e[31mError ejecutando el seeder {$file}:\e[0m " . $e->getMessage() . "\n";
             exit(1);
         }
+        exit(0);
     }
+
+    // =========================================================================
+    // CASO B: Ejecución general (php craft db:seed) -> Llama al DatabaseSeeder central
+    // =========================================================================
+    $mainSeederPath = SEEDERS_PATH . 'DatabaseSeeder.php';
+    if (!file_exists($mainSeederPath)) {
+        echo "\e[31mError Crítico:\e[0m No se encontró el archivo maestro DatabaseSeeder.php en " . SEEDERS_PATH . "\n";
+        exit(1);
+    }
+
+    require_once $mainSeederPath;
+
+    try {
+        echo "\e[36mIniciando el Sembrado General de la Base de Datos...\e[0m\n";
+        $masterSeeder = new DatabaseSeeder();
+        
+        // Ejecuta el método run del DatabaseSeeder pasándole la conexión y la bandera de limpieza
+        $masterSeeder->run($mysqli, $shouldRefresh);
+        
+        echo "\n\e[32m¡Base de datos poblada de forma exitosa y secuencial!\e[0m\n";
+    } catch (\Exception $e) {
+        echo "\e[31mError general en el DatabaseSeeder:\e[0m " . $e->getMessage() . "\n";
+        exit(1);
+    }
+    
     exit(0);
 }
 

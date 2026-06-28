@@ -5,6 +5,7 @@
 use App\Controllers\Admin\AdminDashboardController;
 use App\Controllers\Admin\PermisoController;
 use App\Controllers\Admin\RoleController;
+use App\Controllers\Admin\UserController;
 use App\Controllers\AuthController;
 
 use Core\Route;
@@ -47,5 +48,21 @@ Route::get('/roles/:id/permissions', [RoleController::class, 'permissions'], [$a
 Route::post('/roles/:id/permissions', [RoleController::class, 'updatePermissions'], [$authMiddleware]);
 // Ruta para la eliminación "suave"
 Route::post('/roles/:id/delete', [RoleController::class, 'delete'], [$authMiddleware]);
+
+/** Rutas para Usuarios */
+Route::get('/usuarios', [UserController::class, 'index'], [$authMiddleware]);
+Route::get('/usuarios/create', [UserController::class, 'create'], [$authMiddleware]);
+Route::post('/usuarios', [UserController::class, 'store'], [$authMiddleware]);
+// Ver el listado de la papelera (GET)
+Route::get('/usuarios/wastebasket', [UserController::class, 'wastebasket'], [$authMiddleware]);
+Route::post('/usuarios/:id/restore', [UserController::class, 'restore'], [$authMiddleware]);
+Route::post('/usuarios/:id/destroy', [UserController::class, 'destroy'], [$authMiddleware]);
+// Ruta para la eliminación "suave"
+Route::post('/usuarios/:id/delete', [UserController::class, 'delete'], [$authMiddleware]);
+// Rutas comunes
+Route::get('/usuarios/:id/edit', [UserController::class, 'edit'], [$authMiddleware]);
+Route::post('/usuarios/:id/update', [UserController::class, 'update'], [$authMiddleware]);
+Route::get('/usuarios/:id/roles', [UserController::class, 'roles'], [$authMiddleware]);
+Route::post('/usuarios/:id/roles', [UserController::class, 'updateRoles'], [$authMiddleware]);
 
 Route::dispatch();

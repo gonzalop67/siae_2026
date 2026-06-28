@@ -1,0 +1,22 @@
+<?php
+
+use App\Models\Model;
+
+class {{MigrationClass}} extends Model
+{
+    public function up(): void
+    {
+        // Ejemplo de sintaxis SQL o Query Builder para agregar columnas
+        $sql = "ALTER TABLE `{{TableName}}` ADD COLUMN `nueva_columna` VARCHAR(255) NOT NULL;";
+
+        $this->connection->query($sql);
+    }
+
+    public function down(): void
+    {
+        // Lógica para revertir el cambio
+        $sql = "ALTER TABLE `{{TableName}}` DROP COLUMN `nueva_columna`;";
+        
+        $this->connection->query($sql);
+    }
+}

@@ -16,18 +16,22 @@ class RolSeeder
         // 2. Definición de los roles iniciales de SIAE 2026
         $roles = [
             ['nombre' => 'Administrador', 'slug' => 'administrador', 'descripcion' => 'Acceso total a todos los módulos del sistema administrativo.'],
-            ['nombre' => 'Autoridad', 'slug' => 'Autoridad', 'descripcion' => 'Acceso a reportes de gestión educativa.'],
-            ['nombre' => 'Coordinador',  'slug' => 'coordinador', 'descripcion' => 'Gestión y supervisión de ofertas educativas y asignaciones.'],
-            ['nombre' => 'Docente',      'slug' => 'docente', 'descripcion' => 'Registro de calificaciones, asistencias y rúbricas.'],
-            ['nombre' => 'Estudiante',   'slug' => 'estudiante', 'descripcion' => 'Consulta de historial académico y perfiles.'],
-            ['nombre' => 'Secretaría',   'slug' => 'secretaria', 'descripcion' => 'Acceso a Matriculación y Reportes.'],
-            ['nombre' => 'Tutor',   'slug' => 'tutor', 'descripcion' => 'Acceso a reportes de calificaciones y comportamiento.'],
+            ['nombre' => 'Autoridad',     'slug' => 'autoridad',     'descripcion' => 'Acceso a reportes de gestión educativa.'], // ✔ Normalizado a minúsculas
+            ['nombre' => 'Coordinador',   'slug' => 'coordinador',   'descripcion' => 'Gestión y supervisión de ofertas educativas y asignaciones.'],
+            ['nombre' => 'Docente',       'slug' => 'docente',       'descripcion' => 'Registro de calificaciones, asistencias y rúbricas.'],
+            ['nombre' => 'Estudiante',    'slug' => 'estudiante',    'descripcion' => 'Consulta de historial académico y perfiles.'],
+            ['nombre' => 'Secretaría',    'slug' => 'secretaria',    'descripcion' => 'Acceso a Matriculación y Reportes.'],
+            ['nombre' => 'Tutor',         'slug' => 'tutor',         'descripcion' => 'Acceso a reportes de calificaciones y comportamiento.'],
         ];
 
         echo "    -> Insertando roles base en la tabla [{$tabla}]...\n";
 
         // 🔥 MEJORA: Evita colisiones de ejecución masiva
         $stmt = $mysqli->prepare("INSERT IGNORE INTO `{$tabla}` (nombre, slug, descripcion) VALUES (?, ?, ?)");
+
+        if (!$stmt) {
+            throw new \Exception("Error al preparar RolSeeder: " . $mysqli->error);
+        }
 
         foreach ($roles as $rol) {
             $stmt->bind_param('sss', $rol['nombre'], $rol['slug'], $rol['descripcion']);
@@ -37,4 +41,3 @@ class RolSeeder
         echo "\e[32m    ✅ Roles insertados correctamente.\e[0m\n";
     }
 }
-

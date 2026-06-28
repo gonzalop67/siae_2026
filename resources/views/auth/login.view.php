@@ -36,14 +36,14 @@
 
                         <div class="form-group row">
                             <div class="col-12">
-                                <input class="form-control" type="text" name="usuario" id="usuario" required="" placeholder="Username" autocomplete="username">
+                                <input class="form-control" type="text" name="usuario" id="usuario" required="" placeholder="Nombre de Usuario" autocomplete="username">
                                 <p id="error-usuario" class="invalid-feedback"></p>
                             </div>
                         </div>
 
                         <div class="form-group row">
                             <div class="col-12">
-                                <input class="form-control" type="password" name="clave" id="clave" required="" placeholder="Password" autocomplete="current-password">
+                                <input class="form-control" type="password" name="clave" id="clave" required="" placeholder="Contraseña" autocomplete="current-password">
                                 <p id="error-clave" class="invalid-feedback"></p>
                             </div>
                         </div>
