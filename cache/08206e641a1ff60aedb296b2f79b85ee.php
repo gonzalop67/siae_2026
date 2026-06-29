@@ -1,10 +1,23 @@
 <?php
-// 1. Buscamos automáticamente cuál es el arreglo de la paginación activa
+// 1. Buscamos automáticamente la variable de paginación de forma eficiente
 $source = null;
+
+// Escaneamos las variables locales activas del entorno
 foreach (get_defined_vars() as $key => $value) {
-    if (is_array($value) && isset($value['current_page']) && isset($value['total']) && isset($value['last_page'])) {
+    if (is_array($value) && isset($value['current_page'], $value['total'], $value['last_page'])) {
         $source = $value;
         break;
+    }
+}
+
+// 🔥 ESCUDO MASTER: Si el motor de vistas aisló las variables del @include,
+// extraemos el arreglo directamente desde el búfer global de datos activos del controlador
+if (!$source && isset($GLOBALS)) {
+    foreach ($GLOBALS as $key => $value) {
+        if (is_array($value) && isset($value['current_page'], $value['total'], $value['last_page'])) {
+            $source = $value;
+            break;
+        }
     }
 }
 

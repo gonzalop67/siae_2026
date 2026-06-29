@@ -20,21 +20,33 @@ class UserController extends Controller
 
     public function index()
     {
-        $title = "Listado de Usuarios";
+        $title = "Users Admin";
+        $search = isset($_GET['search']) ? trim($_GET['search']) : "";
 
-        $search = isset($_GET['search']) ? $_GET['search'] : "";
+        // Aseguramos limpiar cualquier residuo estructural previo del modelo
+        $this->userModel->where = "";
+        $this->userModel->values = [];
 
+        // 1. Configuramos el select, el join relacional y el ordenamiento
+        $query = $this->userModel
+            ->select('usuarios.*', 'personas.nombre_completo')
+            ->join('personas', 'usuarios.persona_id', '=', 'personas.id');
+
+        // 2. Aplicamos la búsqueda usando paréntesis explícitos si el usuario escribe algo
         if ($search !== "") {
-            $users = $this->userModel
-                ->where('us_fullname', 'LIKE', '%' . $_GET['search'] . '%')
-                ->orWhere('us_login', 'LIKE', '%' . $_GET['search'] . '%')
-                ->orderBy('us_fullname')
-                ->paginate(5);
-        } else {
-            $users = $this->userModel
-                ->orderBy('us_fullname')
-                ->paginate(5);
+            $likeSearch = '%' . $search . '%';
+            // Calificamos explícitamente las tablas para evitar errores de ambigüedad en el WHERE
+            $query->where = "(personas.nombre_completo LIKE ? OR usuarios.username LIKE ?)";
+            $query->values = [$likeSearch, $likeSearch];
         }
+
+        // 3. Paginar los resultados obtenidos
+        $users = $query->orderBy('personas.nombre_completo', 'ASC')
+            ->paginate(5);
+
+        // 🔥 AGREGA ESTA LÍNEA DE PRUEBA:
+        // show($users);
+        // die();
 
         return $this->view('admin.usuarios.index', compact('users', 'title'));
     }

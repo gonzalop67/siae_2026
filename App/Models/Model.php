@@ -16,6 +16,7 @@ class Model
     public string $where = "";
     public array $values = [];
     protected string $orderBy = "";
+    protected string $joins = ""; // ◄ NUEVA: Almacena los strings de los JOINs
     public array $errors = [];
 
     // SOFT DELETE: Propiedades de control de estado
@@ -148,6 +149,22 @@ class Model
         return $this;
     }
 
+    public function join(string $table, string $first, string $operator, string $second)
+    {
+        // Sanitizar nombres de tablas y columnas básicos omitiendo acentos graves accidentales
+        $table  = trim(str_replace('`', '', $table));
+        $first  = trim(str_replace('`', '', $first));
+        $second = trim(str_replace('`', '', $second));
+        
+        // Estructura nativa SQL para un INNER JOIN estándar
+        $joinSql = " INNER JOIN {$table} ON {$first} {$operator} {$second}";
+        
+        // Permite acumular múltiples joins si se encadenan de forma consecutiva
+        $this->joins .= $joinSql;
+        
+        return $this;
+    }
+
     public function orderBy(string $column, $order = 'ASC')
     {
         $order = strtoupper($order) === 'DESC' ? 'DESC' : 'ASC';
@@ -164,7 +181,8 @@ class Model
     // SOFT DELETE: Modificación crucial para inyectar las cláusulas automáticamente
     protected function buildSelectSql(): string
     {
-        $sql = "SELECT {$this->select} FROM {$this->table}";
+        // 1. Añadimos de forma nativa la variable $this->joins justo después del FROM
+        $sql = "SELECT {$this->select} FROM {$this->table}{$this->joins}";
 
         // Generamos el filtro dinámico de SoftDelete
         $softDeleteWhere = "";
@@ -200,9 +218,8 @@ class Model
         $this->where = "";
         $this->values = [];
         $this->orderBy = "";
+        $this->joins = ""; // ◄ NUEVA: Resetea el búfer de joins para la siguiente ejecución
         $this->query = null;
-        // ❌ ELIMINADO: No limpies aquí con $this->onlyTrashed = false;
-        // ❌ ELIMINADO: No limpies aquí con $this->withTrashed = false;
     }
 
     public function first()
@@ -253,7 +270,11 @@ class Model
             }
         }
 
-        $countSql = "SELECT COUNT(*) as total FROM {$this->table}";
+        // =====================================================================
+        // 🔥 CORRECCIÓN MASTER: Añadida la propiedad $this->joins al conteo total
+        // =====================================================================
+        $countSql = "SELECT COUNT(*) as total FROM {$this->table}{$this->joins}";
+        
         if (!empty($softDeleteWhere)) {
             $countSql .= !empty($this->where) ? " WHERE ({$this->where}) AND {$softDeleteWhere}" : " WHERE {$softDeleteWhere}";
         } elseif (!empty($this->where)) {
@@ -262,9 +283,9 @@ class Model
 
         $countQuery = $this->connection->prepare($countSql);
 
-        // ¡BLINDAJE CRÍTICO AQUÍ! Si la consulta falla, detenemos con el error real de MySQL
+        // ¡BLINDAJE CRÍTICO! Si la consulta tiene fallos de sintaxis o ambigüedad, el CLI/Navegador te lo dirá al instante
         if (!$countQuery) {
-            die("Error preparando el conteo de paginación: " . $this->connection->error . " | SQL generado: " . $countSql);
+            throw new \mysqli_sql_exception("Error preparando el conteo de paginación: " . $this->connection->error . " | SQL generado: " . $countSql);
         }
 
         // CORRECCIÓN CLAVE: Detección dinámica de tipos idéntica a tu método query()
@@ -309,7 +330,6 @@ class Model
         // Construcción de strings de consulta para preservar el buscador en los enlaces
         $queryString = count($queryParams) > 0 ? '&' . http_build_query($queryParams) : '';
 
-        // 🔥 CORRECCIÓN AQUÍ: Movido al final absoluto del proceso.
         // Primero limpiamos la estructura de la consulta
         $this->resetQuery();
 
