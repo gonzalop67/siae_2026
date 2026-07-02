@@ -155,13 +155,13 @@ class Model
         $table  = trim(str_replace('`', '', $table));
         $first  = trim(str_replace('`', '', $first));
         $second = trim(str_replace('`', '', $second));
-        
+
         // Estructura nativa SQL para un INNER JOIN estándar
         $joinSql = " INNER JOIN {$table} ON {$first} {$operator} {$second}";
-        
+
         // Permite acumular múltiples joins si se encadenan de forma consecutiva
         $this->joins .= $joinSql;
-        
+
         return $this;
     }
 
@@ -274,7 +274,7 @@ class Model
         // 🔥 CORRECCIÓN MASTER: Añadida la propiedad $this->joins al conteo total
         // =====================================================================
         $countSql = "SELECT COUNT(*) as total FROM {$this->table}{$this->joins}";
-        
+
         if (!empty($softDeleteWhere)) {
             $countSql .= !empty($this->where) ? " WHERE ({$this->where}) AND {$softDeleteWhere}" : " WHERE {$softDeleteWhere}";
         } elseif (!empty($this->where)) {
@@ -418,44 +418,127 @@ class Model
         return $this;
     }
 
-    public function exists(string $column, string $value, ?int $id = null): bool
+    /**
+     * Verifica si un valor ya existe en una columna específica de una tabla.
+     * 
+     * @param string $column Nombre de la columna a evaluar (ej: 'username', 'dni')
+     * @param string $value Valor a buscar en la base de datos
+     * @param int|null $id ID a excluir de la búsqueda en caso de actualizaciones
+     * @param string|null $tablaOpcional Permite forzar una tabla externa (ej: 'personas')
+     * @return bool
+     */
+    public function exists(string $column, string $value, ?int $id = null, ?string $tablaOpcional = null): bool
     {
-        // 1. Construimos la consulta base
-        $sql = "SELECT COUNT(*) as total FROM {$this->table} WHERE {$column} = ?";
-        $params = [$value];
+        // 🔥 DETECCIÓN DINÁMICA: Si pasan una tabla, la usa. Si no, usa la del modelo actual.
+        $tablaActual = (!empty($tablaOpcional)) ? trim($tablaOpcional) : $this->table;
 
-        // 2. Si pasan un ID (caso Update), lo excluimos de la búsqueda
+        $sql = "SELECT COUNT(*) as total FROM {$tablaActual} WHERE {$column} = ?";
+        $params = [$value];
+        $types = 's';
+
+        // Si pasan un ID (caso Update), lo excluimos de la búsqueda de duplicados
         if ($id !== null) {
             $sql .= " AND {$this->primaryKey} != ?";
             $params[] = $id;
+            $types .= 'i';
         }
 
-        // 3. Soporte para Soft Deletes
+        // Soporte estricto para Soft Deletes calificado por la tabla correspondiente
         if ($this->useSoftDeletes && !$this->withTrashed) {
-            $sql .= " AND deleted_at IS NULL";
+            $sql .= " AND {$tablaActual}.deleted_at IS NULL";
         }
 
-        // Ejecutamos la consulta en el modelo
-        $this->query($sql, $params);
-
-        $result = 0;
-
-        // CORREGIDO: Evaluamos la propiedad interna $this->query, no el retorno del método
-        if ($this->query instanceof \mysqli_result) {
-            // Obtenemos la fila de la propiedad interna
-            $row = $this->query->fetch_assoc();
-            $result = (int)($row['total'] ?? 0);
-
-            // Liberamos la memoria del resultado interno
-            $this->query->free();
+        // Aislamiento total mediante sentencia preparada local directa
+        $stmt = $this->connection->prepare($sql);
+        if (!$stmt) {
+            throw new \mysqli_sql_exception('Error en preparación local exists: ' . $this->connection->error);
         }
 
-        // 4. Resetear el estado de consultas del modelo
-        $this->resetQuery();
+        $stmt->bind_param($types, ...$params);
 
-        return $result > 0;
+        if (!$stmt->execute()) {
+            throw new \mysqli_sql_exception($stmt->error, $stmt->errno);
+        }
+
+        $resultado = $stmt->get_result();
+        $total = 0;
+
+        if ($resultado) {
+            $row = $resultado->fetch_assoc();
+            $total = (int)($row['total'] ?? 0);
+            $resultado->free();
+        }
+
+        $stmt->close();
+
+        return $total > 0;
     }
-    
+
+    /**
+     * Verifica la existencia de un registro de forma aislada y estática.
+     * No utiliza $this para evitar quiebres en bloques transaccionales.
+     * 
+     * @param \mysqli $connection Conexión activa a la base de datos
+     * @param string $table Nombre de la tabla (ej: 'usuarios', 'personas')
+     * @param string $column Nombre de la columna (ej: 'username', 'email')
+     * @param string $value Valor a buscar
+     * @param int|null $excludeId ID a excluir en caso de actualizaciones
+     * @param string $primaryKeyOpcional Nombre físico de la PK en la tabla (por defecto 'id')
+     * @param bool $aplicarSoftDeletes Indica si debe filtrar deleted_at IS NULL (por defecto false)
+     * @return bool
+     */
+    public static function checkExists(
+        \mysqli $connection,
+        string $table,
+        string $column,
+        string $value,
+        ?int $excludeId = null,
+        string $primaryKeyOpcional = 'id',
+        bool $aplicarSoftDeletes = false // ◄ NUEVO PARAMETRO CONTROLADO
+    ): bool {
+
+        $sql = "SELECT COUNT(*) as total FROM `{$table}` WHERE `{$column}` = ?";
+        $params = [$value];
+        $types = 's';
+
+        // Si hay un ID de exclusión válido, lo concatenamos usando la PK correspondiente
+        if ($excludeId !== null && $excludeId > 0) {
+            $sql .= " AND `{$primaryKeyOpcional}` != ?";
+            $params[] = (int)$excludeId;
+            $types .= 'i';
+        }
+
+        // 🔥 CORRECCIÓN: Filtro de Soft Deletes utilizando la bandera local pura
+        if ($aplicarSoftDeletes) {
+            $sql .= " AND `{$table}`.`deleted_at` IS NULL";
+        }
+
+        $stmt = $connection->prepare($sql);
+        if (!$stmt) {
+            throw new \mysqli_sql_exception("Error en checkExists local: " . $connection->error);
+        }
+
+        $stmt->bind_param($types, ...$params);
+
+        if (!$stmt->execute()) {
+            $stmt->close();
+            throw new \mysqli_sql_exception($stmt->error, $stmt->errno);
+        }
+
+        $resultado = $stmt->get_result();
+        $total = 0;
+
+        if ($resultado) {
+            $row = $resultado->fetch_assoc();
+            $total = (int)($row['total'] ?? 0);
+            $resultado->free();
+        }
+
+        $stmt->close();
+
+        return $total > 0;
+    }
+
     public function create(array $data)
     {
         if (!empty($this->fillable)) {

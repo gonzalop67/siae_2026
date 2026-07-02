@@ -3,15 +3,11 @@
 namespace App\Models\Admin;
 
 use App\Models\Model;
-use App\Models\Admin\Persona;
-use Override;
 
 class Usuario extends Model
 {
     protected string $table = 'usuarios';
     protected string $primaryKey = 'id';
-
-    protected Persona $personaModel;
 
     // Define los campos que se pueden llenar masivamente
     protected array $fillable = [
@@ -26,13 +22,6 @@ class Usuario extends Model
     // Activas la funcionalidad exclusivamente para este modelo
     protected bool $useSoftDeletes = true;
 
-    // Constructor para garantizar la inicialización segura de modelos hijos
-    public function __construct()
-    {
-        parent::__construct();
-        $this->personaModel = new Persona();
-    }
-
     // Validación estricta y sincronizada con los campos del Formulario (JS)
     public function validate(array $data, ?int $id = null): bool
     {
@@ -40,11 +29,11 @@ class Usuario extends Model
         $is_updating = ($id !== null);
 
         // 1. Recuperar y limpiar datos del FormData
-        $tipo_documento     = trim($data['tipo_documento'] ?? ''); // NUEVO
-        $nacionalidad       = trim($data['nacionalidad'] ?? '');   // NUEVO
+        $tipo_documento     = trim($data['tipo_documento'] ?? '');
+        $nacionalidad       = trim($data['nacionalidad'] ?? '');
         $dni                = trim($data['dni'] ?? '');
         $titulo             = trim($data['titulo'] ?? '');
-        $titulo_descripcion = trim($data['titulo_descripcion'] ?? '');
+        $descripcion_titulo = trim($data['descripcion_titulo'] ?? '');
         $primer_apellido    = preg_replace('/\s+/', ' ', trim($data['primer_apellido'] ?? ''));
         $segundo_apellido   = preg_replace('/\s+/', ' ', trim($data['segundo_apellido'] ?? ''));
         $primer_nombre      = preg_replace('/\s+/', ' ', trim($data['primer_nombre'] ?? ''));
@@ -57,12 +46,12 @@ class Usuario extends Model
 
         // 2. Bloque de Validaciones Estrictas
 
-        // NUEVO: Validación de Tipo de Documento
+        // Validación de Tipo de Documento
         if ($tipo_documento === '') {
             $this->errors['tipo_documento'] = "Por favor, seleccione un tipo de documento de la lista.";
         }
 
-        // NUEVO: Validación de Nacionalidad
+        // Validación de Nacionalidad
         if ($nacionalidad === '') {
             $this->errors['nacionalidad'] = "Por favor, seleccione una nacionalidad de la lista.";
         }
@@ -80,10 +69,8 @@ class Usuario extends Model
         }
 
         // Descripción del Título
-        if (empty($titulo_descripcion)) {
-            $this->errors['titulo_descripcion'] = "El campo Descripción del Título es obligatorio.";
-        } elseif (!preg_match('/^[a-zA-ZÀ-ÿ\s\.\,\-\_\:\;\(\)\n]{4,500}$/u', $titulo_descripcion)) {
-            $this->errors['titulo_descripcion'] = "La descripción del título tiene que ser de 4 a 500 caracteres.";
+        if (!empty($descripcion_titulo) && !preg_match('/^[a-zA-ZÀ-ÿ\s\.\,\-\_\:\;\(\)\n]{4,500}$/u', $descripcion_titulo)) {
+            $this->errors['descripcion_titulo'] = "La descripción del título tiene que ser de 4 a 500 caracteres.";
         }
 
         // Apellidos
@@ -110,10 +97,45 @@ class Usuario extends Model
             $nombre_completo  = $primer_apellido . " " . $segundo_apellido . " " . $primer_nombre . " " . $segundo_nombre;
             $nombre_completo  = preg_replace('/\s+/', ' ', $nombre_completo);
 
-            // SINCRONIZACIÓN JS: Redirigir el error a 'primer_apellido' para que el Front lo dibuje en pantalla
-            if (!empty($nombre_completo) && $this->personaModel->exists('nombre_completo', $nombre_completo, $id)) {
-                $this->errors['primer_apellido'] = "Ya existe un registro con este Nombre Completo en el sistema.";
+            // =================================================================
+            // EXTRACTOR DEL ID DE LA PERSONA REAL (SIN DETENIMIENTO)
+            // =================================================================
+            $id_persona_excluir = null;
+
+            if ($is_updating) {
+                $sqlP = "SELECT `persona_id` FROM `usuarios` WHERE `id` = ?";
+                $stmtP = $this->connection->prepare($sqlP);
+                if ($stmtP) {
+                    $stmtP->bind_param('i', $id); // Sincronizado con la variable de cabecera
+                    $stmtP->execute();
+                    $resP = $stmtP->get_result();
+                    $filaUsuario = $resP ? $resP->fetch_assoc() : null;
+
+                    // Extraemos el ID real de la persona para la exclusión en la tabla personas
+                    $id_persona_excluir = isset($filaUsuario['persona_id']) ? (int)$filaUsuario['persona_id'] : null;
+
+                    if ($resP) $resP->free();
+                    $stmtP->close();
+                }
             }
+            // =================================================================
+
+            // 2. Invocamos la función estática pasándole la PK real de la tabla personas
+            // CAMBIA EL ÚLTIMO PARÁMETRO 'id' por el nombre real de la PK de tu tabla personas si no se llama 'id' (ej: 'id_persona')
+            if (!empty($nombre_completo) && self::checkExists($this->connection, 'personas', 'nombre_completo', $nombre_completo, $id_persona_excluir, 'id')) {
+                $this->errors['nombre_completo'] = "Ya existe una persona registrada con este Nombre Completo en el sistema.";
+            }
+
+            // =====================================================================
+            // Ejemplo 1: Validar el Nombre Completo (Tabla personas, usando el ID de la persona)
+            // =====================================================================
+            if (!empty($nombre_completo)) {
+                // Invocación limpia: le pasas la conexión, la tabla 'personas' y el ID a excluir
+                if (self::checkExists($this->connection, 'personas', 'nombre_completo', $nombre_completo, $id_persona_excluir)) {
+                    $this->errors['nombre_completo'] = "Ya existe un registro con este Nombre Completo en el sistema.";
+                }
+            }
+            // =================================================================
 
             // Manejo seguro del nombre_corto automático si viene vacío del cliente
             if ($nombre_corto !== "") {
@@ -127,21 +149,26 @@ class Usuario extends Model
             }
         }
 
-        // Login / Usuario
+        // =====================================================================
+        // Ejemplo 2: Validar el Username (Tabla usuarios, usando el ID del usuario)
+        // =====================================================================
         if (empty($username)) {
             $this->errors['username'] = "El campo Nombre de Usuario es obligatorio.";
         } elseif (!preg_match('/^[a-zA-Z0-9\_\-]{4,16}$/', $username)) {
             $this->errors['username'] = "El Nombre de Usuario debe tener entre 4 y 16 caracteres sin espacios.";
-        } elseif ($this->exists('username', $username, $id)) {
+        } elseif (self::checkExists($this->connection, 'usuarios', 'username', $username, $id)) {
+            // ◄ Aquí evalúa la tabla usuarios con el ID del usuario directamente
             $this->errors['username'] = "Ya existe el Nombre de Usuario en la base de datos.";
         }
 
-        // Email
+        // =====================================================================
+        // Ejemplo 3: Validar el Email (Tabla usuarios, usando el ID del usuario)
+        // =====================================================================
         if (empty($email)) {
             $this->errors['email'] = "El campo Email es obligatorio.";
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->errors['email'] = "El correo electrónico ingresado no es válido.";
-        } elseif ($this->exists('email', $email, $id)) {
+        } elseif (self::checkExists($this->connection, 'usuarios', 'email', $email, $id)) {
             $this->errors['email'] = "Ya existe el correo electrónico.";
         }
 
@@ -149,18 +176,17 @@ class Usuario extends Model
         if (!$is_updating && empty($password)) {
             $this->errors['password'] = 'El campo Password es obligatorio.';
         } elseif (!empty($password)) {
-            // CORRECCIÓN REGEX: Sincronizada con el cliente para admitir cualquier carácter especial universal
             if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/', $password)) {
                 $this->errors['password'] = 'Contraseña débil [Mínimo 8 caracteres, mayúscula, minúscula, número y cualquier símbolo].';
             }
         }
 
-        // Checkboxes (Perfiles) -> Clave 'roles' mapeada al id 'roles-container' del JS
+        // Checkboxes (Perfiles)
         if (!is_array($roles) || count($roles) === 0) {
             $this->errors['roles'] = "Debe asignar al menos un rol al usuario.";
         }
 
-        // Validación Imbatible de Imágenes (MIME Type real mediante finfo)
+        // Validación Imbatible de Imágenes (MIME Type real mediante finfo cerrado)
         if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
             $fileTmpPath = $_FILES['avatar']['tmp_name'];
             $fileSize    = $_FILES['avatar']['size'];
@@ -190,27 +216,10 @@ class Usuario extends Model
 
     public function getRoleIds(string $userId)
     {
-        $sql = "SELECT id_perfil FROM sw_usuario_perfil WHERE id_usuario = ?";
+        $sql = "SELECT rol_id FROM usuarios_roles WHERE usuario_id = ?";
         $data = $this->query($sql, [$userId])->get();
 
-        return array_column($data, 'id_perfil');
-    }
-
-    /**
-     * Verifica si el perfil actual del usuario tiene un permiso mediante su slug.
-     */
-    public function hasPermission(string $permissionSlug): bool
-    {
-        if (session_status() === PHP_SESSION_NONE) session_start();
-
-        $userId   = $_SESSION['user_id'] ?? 0;
-        $perfilId = $_SESSION['perfil_id'] ?? 0;
-
-        if ($userId === 0 || $perfilId === 0) {
-            return false;
-        }
-
-        // Lógica de permisos de tu base de datos (continúa tu código original...)
-        return true;
+        // Aquí es donde simulamos el pluck('id')->toArray()
+        return array_column($data, 'rol_id');
     }
 }

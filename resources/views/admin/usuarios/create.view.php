@@ -49,10 +49,10 @@
                             </div>
                         </div>
                         <div class="row mb-2">
-                            <label for="titulo_descripcion" class="col-sm-2 col-form-label">Descripción del Título:</label>
+                            <label for="descripcion_titulo" class="col-sm-2 col-form-label">Descripción del Título:</label>
                             <div class="col-sm-10">
-                                <textarea class="form-control" name="titulo_descripcion" id="titulo_descripcion" rows="2" placeholder="Descripción del Título e.g. Licenciado en Ciencias de la Educación"></textarea>
-                                <div id="error-titulo_descripcion" class="invalid-feedback" style="display:none;"></div>
+                                <textarea class="form-control" name="descripcion_titulo" id="descripcion_titulo" rows="2" placeholder="Descripción del Título e.g. Licenciado en Ciencias de la Educación"></textarea>
+                                <div id="error-descripcion_titulo" class="invalid-feedback" style="display:none;"></div>
                             </div>
                         </div>
                         <div class="row mb-2">

@@ -128,7 +128,7 @@ class UserController extends Controller
             'nombre_corto'       => trim($input['nombre_corto'] ?? ''),
             'nombre_completo'    => $nombre_completo,
             'titulo'             => trim($input['titulo'] ?? ''),
-            'titulo_descripcion' => trim($input['titulo_descripcion'] ?? ''),
+            'descripcion_titulo' => trim($input['titulo_descripcion'] ?? ''),
             'genero'             => trim($input['genero'] ?? ''),
         ];
 
@@ -181,7 +181,7 @@ class UserController extends Controller
                 // __DIR__ está en App/Controllers/Admin (subimos 3 niveles a la raíz)
                 $raizProyecto = dirname(__DIR__, 3);
                 $directorioUploads = $raizProyecto . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads';
-                
+
                 if (!is_dir($directorioUploads)) {
                     mkdir($directorioUploads, 0777, true);
                 }
@@ -205,7 +205,6 @@ class UserController extends Controller
                 'ok' => true,
                 'mensaje' => 'Usuario procesado con éxito.'
             ]);
-
         } catch (\Throwable $e) {
             // 5. REVERTIR TRANSACCIÓN SQL EN CASO DE FALLAS
             $this->userModel->rollBack();
@@ -220,36 +219,202 @@ class UserController extends Controller
                 'mensaje' => "Ocurrió un error inesperado: " . $e->getMessage()
             ]);
         }
-
-    }
-
-    /**
-     * Muestra un recurso específico.
-     */
-    public function show($id)
-    {
-        // $data = $this->model->find($id);
-        // return $this->view('admin.user.show', compact('data'));
     }
 
     /**
      * Muestra el formulario para editar un recurso específico.
      */
-    public function edit($id)
+    public function edit(int $id)
     {
-        $title = 'Editar UserController';
-        // $data = $this->model->find($id);
-        // return $this->view('admin.user.edit', compact('data', 'title'));
+        $title = "Editar Usuario";
+        $usuario = $this->userModel
+            ->select('usuarios.id AS id_usuario', 
+            'persona_id', 
+            'username', 
+            'email', 
+            'password', 
+            'activo', 
+            'avatar', 
+            'personas.*')
+            ->join('personas', 'usuarios.persona_id', '=', 'personas.id')
+            ->where('usuarios.id', $id)
+            ->first();
+        $password = Encrypter::decrypt($usuario['password'] ?? '');
+        $usuario['password'] = $password;
+        // show($usuario);
+        // die();
+        $roles = $this->roleModel->orderBy('nombre')->get();
+        $userRoles = $this->userModel->getRoleIds($id);
+        $tipos_documentos = $this->tipoDocumentoModel->orderBy('id')->get();
+        $nacionalidades = $this->nacionalidadModel->orderBy('id')->get();
+
+        return $this->view('admin.usuarios.edit', compact('title', 'usuario', 'userRoles', 'roles', 'tipos_documentos', 'nacionalidades'));
     }
 
     /**
      * Actualiza un recurso específico en la base de datos.
      */
-    public function update($id)
+    public function update(int $id)
     {
-        // $this->model->update($id, $_POST);
-        // return redirect('/user');
+        // 1. Entrada de datos pura (Confiamos en tu $_POST nativo)
+        $input = $_POST;
+
+        // =====================================================================
+        // 🔥 RESCATE CRÍTICO DE ID DESDE EL FRONTEND
+        // =====================================================================
+        // Si tu Core de rutas no pasa el $id, lo leemos desde los inputs que envía crear.js
+        // (Busca id_usuario o id según cómo se llame tu campo input hidden en el HTML)
+        $id_actual_update = (int)($id ?? $input['id_usuario'] ?? $input['id'] ?? 0);
+
+        if ($id_actual_update === 0) {
+            return json_encode([
+                'ok' => false,
+                'mensaje' => 'Error crítico de scope: El controlador no pudo rescatar el ID del usuario.'
+            ]);
+        }
+        // =====================================================================
+
+        // 2. Validación lógica en el modelo (LE PASAMOS LA VARIABLE BLINDADA)
+        if (!$this->userModel->validate($input, $id_actual_update)) {
+            return json_encode([
+                'ok' => false,
+                'errors' => $this->userModel->errors
+            ]);
+        }
+
+        // 3. Obtener el registro actual del usuario para saber su persona_id y avatar antiguo
+        // Usamos tu método query y first para no romper el buffer
+        $this->userModel->query("SELECT persona_id, avatar, password FROM usuarios WHERE id = ?", [$id], 'i');
+        $usuario_actual = $this->userModel->first();
+
+        if (!$usuario_actual) {
+            return json_encode([
+                'ok' => false,
+                'mensaje' => 'El usuario que intenta actualizar no existe en el sistema.'
+            ]);
+        }
+
+        $idPersona = (int)$usuario_actual['persona_id'];
+        $avatar_antiguo = $usuario_actual['avatar'];
+
+        // 4. Tratamiento condicional del Password (Si viene vacío, conserva el actual)
+        $passwordHash = $usuario_actual['password'];
+        if (!empty($input['password'])) {
+            $passwordHash = Encrypter::encrypt($input['password']);
+        }
+
+        // 5. Limpieza y normalización matricial de textos
+        $primer_apellido  = preg_replace('/\s+/', ' ', trim($input['primer_apellido'] ?? ''));
+        $segundo_apellido = preg_replace('/\s+/', ' ', trim($input['segundo_apellido'] ?? ''));
+        $primer_nombre    = preg_replace('/\s+/', ' ', trim($input['primer_nombre'] ?? ''));
+        $segundo_nombre   = preg_replace('/\s+/', ' ', trim($input['segundo_nombre'] ?? ''));
+        $nombre_completo  = trim($primer_apellido . " " . $segundo_apellido . " " . $primer_nombre . " " . $segundo_nombre);
+
+        // 6. PLANIFICACIÓN DEL AVATAR NUEVO
+        $imageName = $avatar_antiguo; // Por defecto mantiene la imagen que ya tenía
+        $tieneImagenNueva = (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK);
+
+        if ($tieneImagenNueva) {
+            $ext = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
+            $imageName = 'user_' . uniqid() . '_' . time() . '.' . $ext;
+        }
+
+        // 7. Estructurar arreglos masivos de actualización ($fillable)
+        $datos_persona = [
+            'tipo_documento_id'  => (!empty($input['tipo_documento'])) ? (int)$input['tipo_documento'] : null,
+            'nacionalidad_id'    => (!empty($input['nacionalidad'])) ? (int)$input['nacionalidad'] : null,
+            'dni'                => isset($input['dni']) ? trim($input['dni']) : null,
+            'primer_nombre'      => $primer_nombre,
+            'segundo_nombre'     => $segundo_nombre,
+            'primer_apellido'    => $primer_apellido,
+            'segundo_apellido'   => $segundo_apellido,
+            'nombre_corto'       => trim($input['nombre_corto'] ?? ''),
+            'nombre_completo'    => $nombre_completo,
+            'titulo'             => trim($input['titulo'] ?? ''),
+            'descripcion_titulo' => trim($input['descripcion_titulo'] ?? $input['titulo_descripcion'] ?? ''),
+            'genero'             => trim($input['genero'] ?? ''),
+        ];
+
+        $datos_usuario = [
+            'username' => trim($input['username'] ?? ''),
+            'email'    => trim($input['email'] ?? ''),
+            'password' => $passwordHash,
+            'avatar'   => $imageName,
+            'activo'   => $input['activo'] ?? '1'
+        ];
+
+        // show($datos_usuario);
+        // die();
+
+        $roles = $input['roles'] ?? [];
+        $rutaArchivoNuevoSubido = '';
+
+        // 8. CICLO DE PERSISTENCIA TRANSACCIONAL (UPDATE)
+        try {
+            // INICIAR TRANSACCIÓN SQL COMPARTIDA
+            $this->userModel->beginTransaction();
+
+            // A. Actualizar la tabla personas filtrando por su id_persona
+            // (Asegúrate de que tu método update() del modelo reciba los datos y el ID)
+            $this->personaModel->where("id = ?", $idPersona)->update($idPersona, $datos_persona);
+
+            // B. Actualizar la tabla usuarios filtrando por el ID de la URL
+            $this->userModel->where("id = ?", $id)->update($id, $datos_usuario);
+
+            // C. CARGA FÍSICA DEL ARCHIVO NUEVO (Si el usuario subió otra foto)
+            if ($tieneImagenNueva) {
+                $raizProyecto = dirname(__DIR__, 3);
+                $directorioUploads = $raizProyecto . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads';
+                
+                if (!is_dir($directorioUploads)) {
+                    mkdir($directorioUploads, 0777, true);
+                }
+
+                $destino = $directorioUploads . DIRECTORY_SEPARATOR . $imageName;
+
+                if (move_uploaded_file($_FILES['avatar']['tmp_name'], $destino)) {
+                    $rutaArchivoNuevoSubido = $destino;
+                } else {
+                    throw new \Exception("No se pudo guardar la nueva imagen en el servidor.");
+                }
+            }
+
+            // D. Sincronizar los roles (Remueve los perfiles viejos y asienta los nuevos)
+            $this->roleUserModel->sync($id, $roles);
+
+            // E. CONFIRMAR TODOS LOS CAMBIOS EN LA BASE DE DATOS
+            $this->userModel->commit();
+
+            // F. LIMPIEZA POST-COMMIT: Si todo se guardó bien y había una foto nueva, borramos la vieja
+            if ($tieneImagenNueva && !empty($avatar_antiguo) && $avatar_antiguo !== 'default.png') {
+                $raizProyecto = dirname(__DIR__, 3);
+                $rutaFotoVieja = $raizProyecto . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $avatar_antiguo;
+                if (file_exists($rutaFotoVieja)) {
+                    unlink($rutaFotoVieja);
+                }
+            }
+
+            return json_encode([
+                'ok' => true,
+                'mensaje' => 'Usuario y datos personales actualizados con éxito.'
+            ]);
+
+        } catch (\Throwable $e) {
+            // REVERTIR CAMBIOS EN CASO DE FALLAS
+            $this->userModel->rollBack();
+
+            // Si la foto nueva se alcanzó a subir pero el commit falló, la borramos para no dejar basura
+            if (!empty($rutaArchivoNuevoSubido) && file_exists($rutaArchivoNuevoSubido)) {
+                unlink($rutaArchivoNuevoSubido);
+            }
+
+            return json_encode([
+                'ok' => false,
+                'mensaje' => "Error crítico al actualizar: " . $e->getMessage()
+            ]);
+        }
     }
+
 
     /**
      * Elimina un recurso específico de la base de datos.
