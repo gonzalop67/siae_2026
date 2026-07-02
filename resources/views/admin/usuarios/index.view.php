@@ -13,16 +13,16 @@
 
                     <!-- Contenedor para los botones (Alineados a la izquierda) -->
                     <div class="d-flex align-items-center">
-                        <a href="<?= RUTA_URL ?>/users/create" class="btn btn-primary btn-sm mr-1">
+                        <a href="<?= RUTA_URL ?>/usuarios/create" class="btn btn-primary btn-sm mr-1">
                             <i class="fa-solid fa-user-plus"></i> Nuevo Usuario
                         </a>
-                        <a href="<?= RUTA_URL ?>/users/wastebasket" class="btn btn-danger btn-sm">
+                        <a href="<?= RUTA_URL ?>/usuarios/wastebasket" class="btn btn-danger btn-sm">
                             <i class="fa-solid fa-trash"></i> Papelera
                         </a>
                     </div>
 
                     <!-- Formulario de búsqueda (Alineado a la derecha) -->
-                    <form action="<?= RUTA_URL ?>/users" class="form-inline" role="search">
+                    <form action="<?= RUTA_URL ?>/usuarios" class="form-inline" role="search">
                         <!-- ✔ CORRECCIÓN: Se cambió {{ $search }} por PHP nativo seguro -->
                         <input class="form-control form-control-sm mr-2" type="search" name="search"
                             value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>" placeholder="Usuario a buscar..." aria-label="Search">
@@ -32,7 +32,7 @@
                 </div>
             </nav>
 
-            @if (count($users['data']) > 0)
+            @if (count($usuarios['data']) > 0)
                 <div class="table-responsive-sm">
                     <table class="table table-bordered">
                         <thead>
@@ -48,16 +48,16 @@
                         </thead>
                         <tbody>
                             @php
-                                $contador = $users['from'] - 1;
+                                $contador = $usuarios['from'] - 1;
                             @endphp
-                            @foreach ($users['data'] as $user)
+                            @foreach ($usuarios['data'] as $usuario)
                                 @php
                                     $contador++;
                                 @endphp
                                 <tr>
                                     <td>{{ $contador }}</td>
                                     @php
-                                        $fotoNombre = !empty($user['avatar']) ? $user['avatar'] : 'no-disponible.png';
+                                        $fotoNombre = !empty($usuario['avatar']) ? $usuario['avatar'] : 'no-disponible.png';
                                         $rutaFisica = dirname($_SERVER['SCRIPT_FILENAME']) . '/uploads/' . $fotoNombre;
 
                                         if (!file_exists($rutaFisica)) {
@@ -70,23 +70,23 @@
                                     <td>
                                         <img src="{{ $avatarUrl }}" style="border-radius: 50%" width="45" alt="Avatar">
                                     </td>
-                                    <td>{{ $user['username'] }}</td>
+                                    <td>{{ $usuario['username'] }}</td>
 
                                     <!-- ✔ VERIFICADO: Extrae de forma dinámica el campo nombre_completo de tu matriz exitosa -->
-                                    <td>{{ !empty($user['nombre_completo']) ? $user['nombre_completo'] : 'Sin asignar' }}</td>
+                                    <td>{{ !empty($usuario['nombre_completo']) ? $usuario['nombre_completo'] : 'Sin asignar' }}</td>
 
-                                    <td>{{ $user['email'] }}</td>
+                                    <td>{{ $usuario['email'] }}</td>
                                     <td class="text-center">
-                                        <a href="{{ RUTA_URL }}/users/{{ $user['id'] }}/roles" class="btn btn-sm btn-primary" title="Roles">
+                                        <a href="{{ RUTA_URL }}/usuarios/{{ $usuario['id'] }}/roles" class="btn btn-sm btn-primary" title="Roles">
                                             <i class="fa-solid fa-user-gear"></i>
                                         </a>
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group">
-                                            <a href="{{ RUTA_URL }}/users/{{ $user['id'] }}/edit" class="btn btn-success btn-sm" title="Editar">
+                                            <a href="{{ RUTA_URL }}/usuarios/{{ $usuario['id'] }}/edit" class="btn btn-success btn-sm" title="Editar">
                                                 <i class="fa-solid fa-pencil"></i>
                                             </a>
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmarEliminacion({{ $user['id'] }})" title="Eliminar">
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmarEliminacion({{ $usuario['id'] }})" title="Eliminar">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </div>
