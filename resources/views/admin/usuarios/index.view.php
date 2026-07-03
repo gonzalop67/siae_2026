@@ -105,4 +105,51 @@
 
         </div>
     </div>
+    <script>
+        function confirmarEliminacion(idUsuario) {
+            // 1. Mostrar alerta de confirmación previa al borrado
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "El usuario será enviado a la papelera.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                // 2. Si el usuario confirma, enviamos la petición vía Fetch (AJAX)
+                if (result.isConfirmed) {
+                    // Reemplaza esta URL por la ruta real que apunte a tu método destroy
+                    fetch(`${base_url}/usuarios/${idUsuario}/delete`, {
+                            method: 'POST', // O 'DELETE' según manejes tus rutas en PHP puro
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // 3. Alerta de éxito total
+                                Swal.fire(
+                                    '¡Eliminado!',
+                                    data.message,
+                                    'success'
+                                ).then(() => {
+                                    // Recargamos la página o removemos la fila de la tabla dinámicamente
+                                    location.reload();
+                                });
+                            } else {
+                                // Alerta en caso de error lógico
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            // Alerta en caso de error de red
+                            Swal.fire('Error', 'No se pudo comunicar con el servidor.', 'error');
+                        });
+                }
+            });
+        }
+    </script>
 @endsection

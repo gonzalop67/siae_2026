@@ -343,9 +343,6 @@ class UserController extends Controller
             'activo'   => $input['activo'] ?? '1'
         ];
 
-        // show($datos_usuario);
-        // die();
-
         $roles = $input['roles'] ?? [];
         $rutaArchivoNuevoSubido = '';
 
@@ -415,13 +412,157 @@ class UserController extends Controller
         }
     }
 
-
-    /**
-     * Elimina un recurso específico de la base de datos.
-     */
-    public function destroy($id)
+    public function delete(int $id)
     {
-        // $this->model->delete($id);
-        // return redirect('/user');
+        header('Content-Type: application/json');
+
+        try {
+            $eliminado = $this->userModel->delete($id);
+
+            if ($eliminado) {
+                return json_encode([
+                    'success' => true,
+                    'message' => 'El registro ha sido eliminado correctamente.'
+                ]);
+            } else {
+                return json_encode([
+                    'success' => false,
+                    'message' => 'No se encontró el registro o ya fue eliminado.'
+                ]);
+            }
+        } catch (\Throwable $e) {
+            return json_encode([
+                'success' => false,
+                'message' => 'Error en el servidor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function wastebasket()
+    {
+        $title = "Papelera de Usuarios";
+        $search = isset($_GET['search']) ? $_GET['search'] : "";
+
+        // Aseguramos limpiar cualquier residuo estructural previo del modelo
+        $this->userModel->where = "";
+        $this->userModel->values = [];
+
+        // 1. Iniciamos el filtro de borrados lógicos
+        $query = $this->userModel->onlyTrashed();
+
+        // 1. Configuramos el select, el join relacional y el ordenamiento
+        $query = $this->userModel
+            ->select('usuarios.*', 'personas.nombre_completo')
+            ->join('personas', 'usuarios.persona_id', '=', 'personas.id');
+
+        if ($search !== "") {
+            // 2. Asignamos el WHERE explícito calificando las columnas con su tabla
+            $likeSearch = '%' . $search . '%';
+            // Calificamos explícitamente las tablas para evitar errores de ambigüedad en el WHERE
+            $query->where = "(personas.nombre_completo LIKE ? OR usuarios.username LIKE ?)";
+            $query->values = [$likeSearch, $likeSearch];
+        }
+
+        // 3. Ordenamos y paginamos de forma nativa
+        $users = $query->orderBy('deleted_at', 'DESC')->paginate(5);
+
+        // 4. Renderizamos la vista de la papelera
+        return $this->view('admin.usuarios.wastebasket', compact('users', 'title'));
+    }
+
+    // Método para restaurar un usuario (Botón Verde)
+    public function restore(int $id)
+    {
+        header('Content-Type: application/json');
+        try {
+            // Llama al método restore() que añadimos en la clase Model
+            $restaurado = $this->userModel->restore($id);
+
+            if ($restaurado) {
+                echo json_encode(['success' => true, 'message' => 'El usuario ha sido restaurado con éxito.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No se pudo restaurar el usuario.']);
+            }
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // Método para eliminación física definitiva (Botón Rojo)
+    public function destroy(int $id)
+    {
+        header('Content-Type: application/json');
+
+        try {
+            // 1. Buscamos al usuario en la base de datos antes de borrarlo
+            $usuario = $this->userModel->withTrashed()->find($id);
+
+            if (!$usuario) {
+                echo json_encode([
+                    'success' => false,
+                    'titulo'  => 'Atención',
+                    'mensaje' => 'El usuario no existe en el sistema.',
+                    'estado'  => 'warning'
+                ]);
+                exit;
+            }
+
+            // Guardamos el nombre de la foto que está en la base de datos
+            $fotoNombre = !empty($usuario['us_foto']) ? $usuario['us_foto'] : 'no-disponible.png';
+
+            // 2. Ejecutamos la eliminación física definitiva en la base de datos
+            $resultado = $this->userModel->forceDelete($id);
+
+            if ($resultado) {
+                // 3. Si se borró con éxito de la base de datos, procedemos a borrar el archivo físico
+                if ($fotoNombre !== 'no-disponible.png' && $fotoNombre !== 'default.png') {
+                    $rutaFisicaFoto = dirname($_SERVER['SCRIPT_FILENAME']) . '/uploads/' . $fotoNombre;
+
+                    if (file_exists($rutaFisicaFoto)) {
+                        unlink($rutaFisicaFoto);
+                    }
+                }
+
+                echo json_encode([
+                    'success' => true,
+                    'titulo'  => '¡Completado!',
+                    'mensaje' => 'El usuario ha sido eliminado permanentemente del sistema.',
+                    'estado'  => 'success'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'titulo'  => 'Error',
+                    'mensaje' => 'No se pudo eliminar el registro de la base de datos.',
+                    'estado'  => 'error'
+                ]);
+            }
+        } catch (\mysqli_sql_exception $e) {
+            // CAPTURA EXITOSA: Ahora que removimos el die(), el catch atrapa el error 1451 perfectamente
+            if ($e->getCode() === 1451) {
+                echo json_encode([
+                    'success' => false,
+                    'titulo'  => 'No se puede eliminar',
+                    'mensaje' => 'El usuario tiene registros vinculados. Debe reasignar o borrar esas dependencias antes de eliminarlo de forma definitiva.',
+                    'estado'  => 'error'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'titulo'  => 'Error de Base de Datos',
+                    'mensaje' => 'Fallo en la consulta: ' . $e->getMessage(),
+                    'estado'  => 'error'
+                ]);
+            }
+        } catch (\Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'titulo'  => 'Error inesperado',
+                'mensaje' => $e->getMessage(),
+                'estado'  => 'error'
+            ]);
+        }
+        exit;
     }
 }
