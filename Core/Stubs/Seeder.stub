@@ -1,6 +1,6 @@
 <?php
 
-use App\Core\Faker;
+use Core\Faker;
 
 class {{SeederClass}}
 {

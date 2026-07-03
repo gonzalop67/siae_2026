@@ -34,6 +34,7 @@ class DatabaseSeeder
             NacionalidadSeeder::class,    
             PersonaAdminSeeder::class,         
             AdminUserSeeder::class,
+            PersonasDocenteSeeder::class,
         ]);
     }
 
