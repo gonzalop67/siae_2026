@@ -3,6 +3,7 @@
 // Definir rutas
 
 use App\Controllers\Admin\AdminDashboardController;
+use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\PermisoController;
 use App\Controllers\Admin\RoleController;
 use App\Controllers\Admin\UserController;
@@ -64,5 +65,17 @@ Route::get('/usuarios/:id/edit', [UserController::class, 'edit'], [$authMiddlewa
 Route::post('/usuarios/:id/update', [UserController::class, 'update'], [$authMiddleware]);
 Route::get('/usuarios/:id/roles', [UserController::class, 'roles'], [$authMiddleware]);
 Route::post('/usuarios/:id/roles', [UserController::class, 'updateRoles'], [$authMiddleware]);
+
+/** Rutas para Menús */
+Route::get('/menus', [MenuController::class, 'index'], [$authMiddleware]);
+Route::post('/menus/get_menu_ajax', [MenuController::class, 'get_menu_ajax'], [$authMiddleware]);
+Route::post('/menus/guardar_orden_ajax', [MenuController::class, 'guardar_orden_ajax'], [$authMiddleware]);
+Route::post('/menus/store', [MenuController::class, 'store'], [$authMiddleware]);
+Route::post('/menus/:id/edit', [MenuController::class, 'edit'], [$authMiddleware]);
+Route::post('/menus/update', [MenuController::class, 'update'], [$authMiddleware]);
+Route::post('/menus/delete/:id', [MenuController::class, 'delete'], [$authMiddleware]);
+Route::get('/menus/papelera', [MenuController::class, 'papelera'], [$authMiddleware]);
+Route::post('/menus/restore/:id', [MenuController::class, 'restore'], [$authMiddleware]);
+Route::post('/menus/destroy/:id', [MenuController::class, 'destroy'], [$authMiddleware]);
 
 Route::dispatch();

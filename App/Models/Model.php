@@ -65,6 +65,16 @@ class Model
         return (int)($this->connection->insert_id ?? 0);
     }
 
+    // Agrega este método dentro de tu clase Model.php:
+    /**
+     * Obtiene el resultado de la última consulta ejecutada
+     * @return mixed
+     */
+    public function getQueryResult()
+    {
+        return $this->query;
+    }
+
     // SOFT DELETE: Métodos modificadores de flujo estilo Laravel
     public function withTrashed()
     {
@@ -548,10 +558,18 @@ class Model
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
         $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})";
 
-        // return array_values($data);
-
+        // 1. Se ejecuta la inserción
         $this->query($sql, array_values($data));
-        return $this->find($this->connection->insert_id);
+
+        // 2. CAPTURA INMEDIATA: Guardamos el ID antes de alterar cualquier estado
+        $idInsertado = (int)$this->connection->insert_id;
+
+        // 3. LIMPIEZA PREVENTIVA: Forzamos el reseteo del búfer del modelo 
+        // para que la consulta que viene dentro de find() no herede basura del INSERT
+        $this->resetQuery();
+
+        // 4. Retornamos la búsqueda limpia utilizando la variable local
+        return $this->find($idInsertado);
     }
 
     public function update(int $id, array $data)
@@ -559,6 +577,12 @@ class Model
         if (!empty($this->fillable)) {
             $data = array_intersect_key($data, array_flip($this->fillable));
         }
+
+        // Salvaguarda: Si no quedan campos válidos por actualizar, evita ejecutar SQL
+        if (empty($data)) {
+            return true;
+        }
+
         $fields = [];
         foreach (array_keys($data) as $key) {
             $fields[] = "{$key} = ?";
@@ -567,11 +591,8 @@ class Model
         $values = array_values($data);
         $values[] = $id;
 
-        // Ejecutamos la consulta preparada
         $this->query($sql, $values);
 
-        // CORRECCIÓN CRÍTICA: Si no hay código de error (errno === 0), la consulta fue exitosa
-        // independientemente de si se modificaron filas en los textos o no.
         return $this->connection->errno === 0;
     }
 
@@ -589,7 +610,8 @@ class Model
             $this->query($sql, [$id], 'i');
         }
 
-        return $this->query > 0; // Verifica filas afectadas
+        // CORRECCIÓN CRÍTICA: Evaluamos que la consulta se haya ejecutado sin errores del motor de base de datos
+        return $this->connection->errno === 0;
     }
 
     // Inicia la transacción desactivando el autocommit
