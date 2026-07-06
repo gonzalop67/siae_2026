@@ -37,13 +37,14 @@ if (!$command) {
     echo "  php craft make:migration {nombre} [--create=tabla] [--table=tabla]\n";
     echo "  php craft make:seeder {Nombre}\n";
     echo "  php craft make:crud {nombre_tabla}\n\n";
-    
+
     echo "\e[36mComandos de Base de Datos:\e[0m\n";
     echo "  php craft migrate             Ejecuta las migraciones pendientes.\n";
     echo "  php craft migrate:rollback    Revierte el último lote de migraciones aplicado.\n";
     echo "  php craft migrate:refresh     Borra todo el esquema y vuelve a ejecutar las migraciones.\n";
+    echo "                                \e[34mOpciones:\e[0m \e[32m--seed\e[0m (Pobla los datos inmediatamente después).\n";
     echo "  php craft db:seed [{Nombre}] [--refresh]\n\n";
-    
+
     echo "\e[36mOpciones y Banderas:\e[0m\n";
     echo "  -m, --model       Genera un modelo acoplado (al crear controlador) o migración (al crear modelo).\n";
     echo "  -c, --controller  Genera un controlador básico acoplado al modelo.\n";
@@ -51,17 +52,19 @@ if (!$command) {
     echo "  --create=tabla    Especifica el nombre de la tabla a crear en la migración.\n";
     echo "  --table=tabla     Especifica una tabla existente para alterar su estructura (ALTER TABLE).\n";
     echo "  --refresh         Vacía las tablas mediante TRUNCATE antes de ejecutar los seeders.\n";
+    echo "  --seed            Indica que se deben correr los seeders automáticamente.\n";
     exit(0);
 }
 
 // ==========================================
 // FUNCIONES AUXILIARES DE GENERACIÓN
 // ==========================================
-function generarMigración($name, $forcedTableName = null, $action = 'create') {
+function generarMigración($name, $forcedTableName = null, $action = 'create')
+{
     if (!is_dir(MIGRATIONS_PATH)) {
         mkdir(MIGRATIONS_PATH, 0755, true);
     }
-    
+
     // 1. Resolver el nombre limpio de la tabla destino
     if ($forcedTableName) {
         $pureName = strtolower($forcedTableName);
@@ -72,14 +75,14 @@ function generarMigración($name, $forcedTableName = null, $action = 'create') {
             $pureName = str_replace('_table', '', $pureName);
         } else {
             $pureName = str_replace(['create_', '_table'], '', strtolower($name));
-            
+
             // 2. PLURALIZACIÓN INTELIGENTE NATIVA (Solo para creación de tablas)
             if (!str_ends_with($pureName, 's')) {
                 $pureName .= 's';
             }
         }
     }
-    
+
     // 3. Estandarizar el nombre del archivo según la acción
     if ($action === 'alter') {
         $migrationName = strtolower($name);
@@ -88,9 +91,9 @@ function generarMigración($name, $forcedTableName = null, $action = 'create') {
         $migrationName = 'create_' . str_replace(['create_', '_table'], '', strtolower($name)) . '_table';
         $stubFile = STUBS_PATH . 'Migration.stub';
     }
-    
+
     $tableName = $pureName;
-    
+
     // 4. Convertir a CamelCase para la Clase (ej: AddTelefonoToSwPersonaTable)
     $className = str_replace(' ', '', ucwords(str_replace('_', ' ', $migrationName)));
 
@@ -106,17 +109,18 @@ function generarMigración($name, $forcedTableName = null, $action = 'create') {
 
     $template = file_get_contents($stubFile);
     $compiled = str_replace(['{{MigrationClass}}', '{{TableName}}'], [$className, $tableName], $template);
-    
+
     file_put_contents($targetFile, $compiled);
     echo "\e[32mMigración creada con éxito:\e[0m database/migrations/{$filename} (Tabla: {$tableName})\n";
 }
 
-function generarControlador($name, $isResource, $descomentarCrud = false) {
+function generarControlador($name, $isResource, $descomentarCrud = false)
+{
     // 1. Asegurar el sufijo Controller e identificar rutas / subcarpetas
     if (!str_ends_with($name, 'Controller')) $name .= 'Controller';
     $name = trim(str_replace('\\', '/', $name), '/');
     $parts = explode('/', $name);
-    
+
     $className = array_pop($parts); // "OfertasEducativasController"
     $subFolders = implode('/', $parts); // "Admin" o vacío
 
@@ -125,8 +129,8 @@ function generarControlador($name, $isResource, $descomentarCrud = false) {
     $targetFile = $targetDir . $className . '.php';
 
     $namespaceBase = 'App\Controllers';
-    $namespaceFinal = $subFolders 
-        ? $namespaceBase . '\\' . str_replace('/', '\\', $subFolders) 
+    $namespaceFinal = $subFolders
+        ? $namespaceBase . '\\' . str_replace('/', '\\', $subFolders)
         : $namespaceBase;
 
     // 3. Validar existencia del archivo controlador
@@ -156,11 +160,11 @@ function generarControlador($name, $isResource, $descomentarCrud = false) {
     $lowerName = strtolower($baseName);
 
     $compiled = str_replace(
-        ['{{Namespace}}', '{{ClassName}}', '{{LowerName}}'], 
-        [$namespaceFinal, $className, $lowerName], 
+        ['{{Namespace}}', '{{ClassName}}', '{{LowerName}}'],
+        [$namespaceFinal, $className, $lowerName],
         $template
     );
-    
+
     // 7. Tu lógica nativa: Activar líneas comentadas si viene de make:crud
     if ($descomentarCrud) {
         $compiled = preg_replace('/^\s*\/+\s*(\$this->model|\$data|return redirect|return \$this)/m', '$1', $compiled);
@@ -171,7 +175,8 @@ function generarControlador($name, $isResource, $descomentarCrud = false) {
     echo "\e[32mControlador creado con éxito:\e[0m App/Controllers/{$name}.php\n";
 }
 
-function generarModelo($name) {
+function generarModelo($name)
+{
     // 1. Limpiar barras y separar el nombre de la clase de las subcarpetas
     $name = trim(str_replace('\\', '/', $name), '/');
     $parts = explode('/', $name);
@@ -183,8 +188,8 @@ function generarModelo($name) {
     $targetFile = $targetDir . $className . '.php';
 
     $namespaceBase = 'App\Models';
-    $namespaceFinal = $subFolders 
-        ? $namespaceBase . '\\' . str_replace('/', '\\', $subFolders) 
+    $namespaceFinal = $subFolders
+        ? $namespaceBase . '\\' . str_replace('/', '\\', $subFolders)
         : $namespaceBase;
 
     // 3. Validar existencia del archivo
@@ -210,10 +215,10 @@ function generarModelo($name) {
 
     // 7. Leer, reemplazar variables e inyectar el Namespace
     $template = file_get_contents(STUBS_PATH . 'Model.stub');
-    
+
     $compiled = str_replace(
-        ['{{Namespace}}', '{{ModelName}}', '{{TableName}}'], 
-        [$namespaceFinal, $className, $tableName], 
+        ['{{Namespace}}', '{{ModelName}}', '{{TableName}}'],
+        [$namespaceFinal, $className, $tableName],
         $template
     );
 
@@ -470,10 +475,10 @@ if ($command === 'migrate:refresh') {
     if ($tableCheck->num_rows > 0) {
         // Seleccionamos todas las migraciones registradas en orden estrictamente descendente
         $result = $mysqli->query("SELECT id, migration FROM migrations ORDER BY id DESC");
-        
+
         if ($result && $result->num_rows > 0) {
             echo "\e[36mRevirtiendo todas las migraciones existentes...\e[0m\n";
-            
+
             // Desactivar restricciones de llaves foráneas para evitar bloqueos al borrar tablas
             $mysqli->query("SET FOREIGN_KEY_CHECKS = 0;");
 
@@ -502,20 +507,20 @@ if ($command === 'migrate:refresh') {
                         exit(1);
                     }
                 }
-                
+
                 // Eliminar el registro de control uno a uno
                 $deleteStmt = $mysqli->prepare("DELETE FROM migrations WHERE id = ?");
                 $deleteStmt->bind_param('i', $migrationId);
                 $deleteStmt->execute();
                 $deleteStmt->close();
             }
-            
+
             // Reactivar validaciones de integridad de MySQL
             $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
         }
     }
 
-    // 2. PASO 2: EJECUTAR TODAS LAS MIGRACIONES DESDE CERO
+    // 2. PASO 2: EJECUTAR TODAS LAS MIGRACIONES DESCE CERO
     if (!is_dir(MIGRATIONS_PATH)) {
         echo "\e[33mNo se encontró la carpeta de migraciones para volver a compilar.\e[0m\n";
         exit(0);
@@ -540,7 +545,7 @@ if ($command === 'migrate:refresh') {
     echo "\e[36mReejecutando todas las migraciones en un lote limpio (Lote 1)...\e[0m\n";
 
     // Al ser un refresh total, todas las tablas e instrucciones entran en el Batch número 1
-    $currentBatch = 1; 
+    $currentBatch = 1;
 
     foreach ($allMigrations as $file) {
         require_once MIGRATIONS_PATH . $file;
@@ -561,9 +566,9 @@ if ($command === 'migrate:refresh') {
 
             // Desactivar llaves foráneas para mitigar cualquier error de orden jerárquico involuntario
             $mysqli->query("SET FOREIGN_KEY_CHECKS = 0;");
-            
+
             $migrationInstance->up(); // Ejecuta el CREATE TABLE o ALTER TABLE ADD
-            
+
             $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
 
             // Registrar en la tabla de control bajo el Lote 1
@@ -581,6 +586,37 @@ if ($command === 'migrate:refresh') {
     }
 
     echo "\e[32m¡Base de datos restablecida y actualizada con éxito!\e[0m\n";
+
+    // =========================================================================
+    // 🔥 CORRECCIÓN: Validamos tanto en tu arreglo $flags como en el buffer nativo de PHP
+    // =========================================================================
+    $hasSeed = in_array('--seed', $flags) || (isset($argv) && in_array('--seed', $argv));
+
+    if ($hasSeed) {
+        echo "\n\e[34mDetectada bandera --seed. Iniciando el sembrado general de datos...\e[0m\n";
+        
+        $mainSeederPath = SEEDERS_PATH . 'DatabaseSeeder.php';
+        if (!file_exists($mainSeederPath)) {
+            echo "\e[31mError Crítico:\e[0m No se encontró el archivo maestro DatabaseSeeder.php en " . SEEDERS_PATH . "\n";
+            exit(1);
+        }
+
+        // Cargamos el archivo de forma directa
+        require_once $mainSeederPath;
+
+        try {
+            $masterSeeder = new DatabaseSeeder();
+            
+            // Pasamos false en refresh porque las migraciones de arriba ya dejaron las tablas vacías
+            $masterSeeder->run($mysqli, false);
+            
+            echo "\e[32m✔ Base de datos sembrada de forma exitosa.\e[0m\n";
+        } catch (\Exception $e) {
+            echo "\e[31mError ejecutando las semillas tras el refresh:\e[0m " . $e->getMessage() . "\n";
+            exit(1);
+        }
+    }
+
     exit(0);
 }
 
@@ -628,7 +664,8 @@ if ($command === 'make:model') {
 // ==========================================
 // FUNCIÓN AUXILIAR DE GENERACIÓN
 // ==========================================
-function generarSeeder($name, $modelName = null) {
+function generarSeeder($name, $modelName = null)
+{
     if (!is_dir(SEEDERS_PATH)) {
         mkdir(SEEDERS_PATH, 0755, true);
     }
@@ -646,14 +683,14 @@ function generarSeeder($name, $modelName = null) {
     }
 
     $template = file_get_contents(STUBS_PATH . 'Seeder.stub');
-    
+
     // 1. Deducir el nombre de la tabla basándonos en el Modelo (estilo Laravel/tu framework)
     $tableName = 'tu_tabla'; // Valor por defecto si no pasan --model
-    
+
     if ($modelName) {
         // Convertir CamelCase a snake_case (ej: OfertaEducativa -> oferta_educativa)
         $snake = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $modelName));
-        
+
         // Pluralización simple (ej: user -> users, oferta_educativa -> oferta_educativas)
         $tableName = $snake;
         if (!str_ends_with($tableName, 's')) {
@@ -663,8 +700,8 @@ function generarSeeder($name, $modelName = null) {
 
     // 2. Reemplazar las variables exactas de tu Stub
     $compiled = str_replace(
-        ['{{SeederClass}}', '{{TableName}}'], 
-        [$name, $tableName], 
+        ['{{SeederClass}}', '{{TableName}}'],
+        [$name, $tableName],
         $template
     );
 
@@ -722,11 +759,11 @@ if ($command === 'db:seed') {
         echo "\e[31mEstás intentando ejecutar un --refresh en un entorno de PRODUCCIÓN.\e[0m\n";
         echo "\e[31mEsta acción ELIMINARÁ permanentemente todos los datos de las tablas afectadas.\e[0m\n\n";
         echo "¿Estás completamente seguro de continuar? (Escribe 'si' para confirmar): ";
-        
+
         $handle = fopen("php://stdin", "r");
         $line = trim(fgets($handle));
         fclose($handle);
-        
+
         if (strtolower($line) !== 'si') {
             echo "\n\e[32mOperación cancelada de manera segura. No se modificó ningún dato.\e[0m\n";
             exit(0);
@@ -750,7 +787,7 @@ if ($command === 'db:seed') {
         }
 
         require_once $filePath;
-        
+
         echo "Ejecutando Seeder Individual: {$name}...\n";
         try {
             $seederInstance = new $name();
@@ -777,26 +814,27 @@ if ($command === 'db:seed') {
     try {
         echo "\e[36mIniciando el Sembrado General de la Base de Datos...\e[0m\n";
         $masterSeeder = new DatabaseSeeder();
-        
+
         // Ejecuta el método run del DatabaseSeeder pasándole la conexión y la bandera de limpieza
         $masterSeeder->run($mysqli, $shouldRefresh);
-        
+
         echo "\n\e[32m¡Base de datos poblada de forma exitosa y secuencial!\e[0m\n";
     } catch (\Exception $e) {
         echo "\e[31mError general en el DatabaseSeeder:\e[0m " . $e->getMessage() . "\n";
         exit(1);
     }
-    
+
     exit(0);
 }
 
-function generarVistasCrud($name) {
+function generarVistasCrud($name)
+{
     $tabla = strtolower($name);
-    
+
     // Configurar plurales y singulares descriptivos para las etiquetas
     $pluralCap = ucfirst($tabla);
     $singularCap = ucfirst(str_ends_with($tabla, 's') ? substr($tabla, 0, -1) : $tabla);
-    
+
     // Carpeta destino de vistas según tu estructura
     $vistasDir = __DIR__ . "/resources/views/admin/{$tabla}";
     if (!is_dir($vistasDir)) {
@@ -805,7 +843,7 @@ function generarVistasCrud($name) {
 
     // Conexión nativa MySQL para inspeccionar la tabla
     try {
-        $pdo = new PDO("mysql:host=".DB_HOST.";dbname=".DB_NAME.";charset=utf8mb4", DB_USER, DB_PASS, [
+        $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
         $stmt = $pdo->query("DESCRIBE `$tabla`");
@@ -825,7 +863,7 @@ function generarVistasCrud($name) {
     foreach ($columnas as $col) {
         $field = $col['Field'];
         $type  = strtolower($col['Type']);
-        
+
         if ($col['Key'] === 'PRI') {
             $primaryKey = $field;
             continue;
@@ -899,7 +937,7 @@ function generarVistasCrud($name) {
     $indexView .= "            @else\n";
     $indexView .= "                <div class=\"text-center\">Aún no se han registrado {$pluralCap}.</div>\n";
     $indexView .= "            @endif\n        </div>\n    </div>\n";
-    
+
     // Inyección de lógica JavaScript de SweetAlert2 acoplada a tu enrutador
     $indexView .= "    <script>\n";
     $indexView .= "        function confirmarEliminacion(id) {\n";
@@ -935,7 +973,7 @@ function generarVistasCrud($name) {
     file_put_contents("{$vistasDir}/index.view.php", $indexView);
 
     // Vista create.view.php
-        // --- VISTA CREATE (DISEÑO AVANZADO BOOTSTRAP 4) ---
+    // --- VISTA CREATE (DISEÑO AVANZADO BOOTSTRAP 4) ---
     $createView = "@extends('layout.app')\n\n@section('content')\n";
     $createView .= "    <div class=\"row\">\n        <div class=\"col-md-12\">\n";
     $createView .= "            <!-- Page Heading -->\n";
@@ -948,13 +986,13 @@ function generarVistasCrud($name) {
     $createView .= "                <div class=\"card-body\">\n";
     $createView .= "                    <form action=\"{{ RUTA_URL }}/{$tabla}\" method=\"POST\" autocomplete=\"off\">\n";
     $createView .= "                        <div class=\"row\">\n";
-    
+
     // Inyectamos los campos mapeados dinámicamente de la base de datos envolviéndolos en columnas
     $createView .= "                            <!-- Campos Dinámicos -->\n";
     $createView .= "                            <div class=\"col-md-8 offset-md-2\">\n";
     $createView .= "{$camposFormCrear}";
     $createView .= "                            </div>\n";
-    
+
     $createView .= "                        </div>\n";
     $createView .= "                        <hr>\n";
     $createView .= "                        <div class=\"d-flex justify-content-end\">\n";
@@ -1015,12 +1053,13 @@ function generarVistasCrud($name) {
     echo "\e[32mVistas creadas con éxito:\e[0m App/views/admin/{$tabla}/ (index, create, edit)\n";
 }
 
-function inyectarRutasCrud($name) {
+function inyectarRutasCrud($name)
+{
     $tabla = strtolower($name);
-    
+
     // ALGORITMO DE SINGULARIZACIÓN COMPUESTA CORREGIDO:
     $palabras = explode('_', $tabla);
-    $palabrasSingulares = array_map(function($palabra) {
+    $palabrasSingulares = array_map(function ($palabra) {
         if (str_ends_with($palabra, 's')) {
             return substr($palabra, 0, -1);
         }
@@ -1029,7 +1068,7 @@ function inyectarRutasCrud($name) {
 
     $modelName = implode('', array_map('ucfirst', $palabrasSingulares));
     $controllerName = $modelName . 'Controller';
-    
+
     $routesFile = __DIR__ . '/routes/web.php';
     if (!file_exists($routesFile)) return;
 
@@ -1077,12 +1116,12 @@ if ($command === 'make:crud') {
         echo "\e[31mError:\e[0m Debes especificar el nombre de la tabla.\n";
         exit(1);
     }
-    
+
     $pureName = strtolower($name);
-    
+
     // ALGORITMO DE SINGULARIZACIÓN COMPUESTA CORREGIDO:
     $palabras = explode('_', $pureName); // Separa 'ofertas' y 'educativas'
-    $palabrasSingulares = array_map(function($palabra) {
+    $palabrasSingulares = array_map(function ($palabra) {
         // Si la palabra termina en 's', se la quitamos de forma segura
         if (str_ends_with($palabra, 's')) {
             return substr($palabra, 0, -1);
@@ -1094,16 +1133,16 @@ if ($command === 'make:crud') {
     $modelName = implode('', array_map('ucfirst', $palabrasSingulares));
 
     echo "\e[34mIniciando generación de CRUD completo para: {$pureName}\e[0m\n";
-    
+
     // 1. Generar el modelo nativo (ej: App/Models/OfertaEducativa.php)
     generarModelo($modelName);
-    
+
     // 2. Generar el controlador de recursos activo (ej: App/Controllers/OfertaEducativaController.php)
     generarControlador($modelName . 'Controller', true, true);
-    
+
     // 3. Generar el árbol de vistas inteligente de MiniBlade (Bootstrap 4)
     generarVistasCrud($pureName);
-    
+
     // 4. Inyectar el mapeo de rutas seguro
     inyectarRutasCrud($pureName);
 

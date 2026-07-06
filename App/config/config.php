@@ -7,6 +7,8 @@ if (!defined('DB_PASS'))     define('DB_PASS', 'AQSWDE123');
 if (!defined('DB_NAME'))     define('DB_NAME', 'siae_2026');
 if (!defined('APP_NAME'))    define('APP_NAME', 'SIAE_2026');
 
+if (!defined('ENVIRONMENT')) define('ENVIRONMENT', 'development');
+
 // 2. Cálculo infalible de rutas absolutas basadas en la posición real del archivo
 // Si este archivo está en App/config/config.php:
 // __DIR__ es App/config. El dirname(__DIR__) retrocede un nivel y obtiene la carpeta App.

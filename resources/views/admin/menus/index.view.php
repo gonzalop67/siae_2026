@@ -161,31 +161,50 @@
     <script>
         $(document).ready(function() {
 
-            // Para el Formulario de Inserción (Fijo)
-            $('#icono').on('input', function() {
+            // 1. Previsualización para el Formulario de Inserción (Fijo)
+            $(document).on('input', '#icono', function() {
                 let iconoClase = $(this).val().trim();
-                let visor = document.getElementById('mi-previsualizador-icono');
-                if (!visor) return;
+                let $inputGroupText = $('#mi-previsualizador-icono').parent(); // Apunta al contenedor SPAN
+
+                if ($inputGroupText.length === 0) return;
 
                 if (iconoClase !== "") {
-                    // Mantiene 'text-primary' y aplica lo que escriba el usuario (sea fas o mdi)
-                    visor.className = iconoClase + " text-primary";
+                    // Reconstruimos una etiqueta <i> limpia con las clases del usuario
+                    $inputGroupText.html(
+                        `<i id="mi-previsualizador-icono" class="${iconoClase} text-primary"></i>`);
                 } else {
-                    // Regresa al ícono por defecto si está vacío
-                    visor.className = "fas fa-question text-secondary";
+                    // Regresa al signo de pregunta por defecto
+                    $inputGroupText.html(
+                        '<i id="mi-previsualizador-icono" class="fas fa-question text-secondary"></i>');
+                }
+
+                // 🔥 PASO CRÍTICO: Obliga al script de FontAwesome a procesar el nuevo <i> si es necesario
+                if (window.FontAwesome) {
+                    window.FontAwesome.dom.i2svg({
+                        node: $inputGroupText[0]
+                    });
                 }
             });
 
-            // Para el Formulario de Edición (Modal)
-            $('#icono_update').on('input', function() {
+            // 2. Previsualización para el Formulario de Edición (Modal)
+            $(document).on('input', '#icono_update', function() {
                 let iconoClase = $(this).val().trim();
-                let visor = document.getElementById('mostrar-icono-update');
-                if (!visor) return;
+                let $inputGroupText = $('#mostrar-icono-update').parent(); // Apunta al contenedor SPAN
+
+                if ($inputGroupText.length === 0) return;
 
                 if (iconoClase !== "") {
-                    visor.className = iconoClase + " text-primary";
+                    $inputGroupText.html(
+                        `<i id="mostrar-icono-update" class="${iconoClase} text-primary"></i>`);
                 } else {
-                    visor.className = "fas fa-question text-secondary";
+                    $inputGroupText.html(
+                        '<i id="mostrar-icono-update" class="fas fa-question text-secondary"></i>');
+                }
+
+                if (window.FontAwesome) {
+                    window.FontAwesome.dom.i2svg({
+                        node: $inputGroupText[0]
+                    });
                 }
             });
 
