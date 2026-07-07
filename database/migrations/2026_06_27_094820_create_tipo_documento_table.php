@@ -12,7 +12,7 @@ class CreateTipoDocumentoTable extends Model
         $sql = "CREATE TABLE IF NOT EXISTS tipo_documento (
             id INT AUTO_INCREMENT PRIMARY KEY,
             -- Agrega tus columnas aquí
-            `descripcion` VARCHAR(50) NOT NULL UNIQUE,
+            descripcion VARCHAR(50) NOT NULL UNIQUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at TIMESTAMP NULL

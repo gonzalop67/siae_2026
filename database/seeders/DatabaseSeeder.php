@@ -21,12 +21,24 @@ class DatabaseSeeder
             $mysqli->query("TRUNCATE TABLE `tipo_documento`;");
             $mysqli->query("TRUNCATE TABLE `roles`;");
 
-            // AGREGADO: Vaciado de las nuevas tablas de control de accesos
+            // Tablas de control de accesos y menús
             $mysqli->query("TRUNCATE TABLE `menus`;");
             $mysqli->query("TRUNCATE TABLE `permisos`;");
-
-            // AGREGADO: Vaciado de la tabla pivote intermedia
             $mysqli->query("TRUNCATE TABLE `roles_permisos`;");
+
+            // NÚCLEO ACADÉMICO: Añadidos todos los truncates correspondientes para limpiar el lote
+            $mysqli->query("TRUNCATE TABLE `periodos_lectivos`;");
+            $mysqli->query("TRUNCATE TABLE `periodos_academicos`;");
+            $mysqli->query("TRUNCATE TABLE `tipos_evaluacion`;");
+            $mysqli->query("TRUNCATE TABLE `cursos`;");
+            $mysqli->query("TRUNCATE TABLE `asignaturas`;");
+            $mysqli->query("TRUNCATE TABLE `malla_curricular`;");
+            $mysqli->query("TRUNCATE TABLE `paralelos`;");
+            $mysqli->query("TRUNCATE TABLE `aulas_periodo`;");
+            $mysqli->query("TRUNCATE TABLE `alumnos`;");
+            $mysqli->query("TRUNCATE TABLE `matriculas`;");
+            $mysqli->query("TRUNCATE TABLE `insumos_evaluacion`;");
+            $mysqli->query("TRUNCATE TABLE `calificaciones`;");
 
             // 3. Reactivar la seguridad de llaves foráneas de forma obligatoria
             $mysqli->query("SET FOREIGN_KEY_CHECKS = 1;");
@@ -41,12 +53,23 @@ class DatabaseSeeder
             NacionalidadSeeder::class,
             PersonaAdminSeeder::class,
             AdminUserSeeder::class,
-            PersonasDocenteSeeder::class,
+            PersonasDocenteSeeder::class, // Puebla personas de prueba antes de AlumnoSeeder
 
-            // Jerarquía Crítica de Seguridad:
-            PermisoSeeder::class,         // 1. Primero creamos los permisos
-            RolesPermisosSeeder::class,   // 2. Segundo, vinculamos esos permisos a los Roles base
-            MenuSeeder::class,            // 3. Tercero, renderizamos el árbol maestro de menús
+            // NÚCLEO CONFIGURACIÓN ACADÉMICA BASE:
+            PeriodoLectivoSeeder::class,   // Crea el año escolar, trimestres y el catálogo de tipos_evaluacion
+            CursoSeeder::class,
+            AsignaturaSeeder::class,
+            TipoEvaluacionSeeder::class,
+            MallaCurricularSeeder::class,  // Depende de cursos y asignaturas
+            ParaleloSeeder::class,         // Puebla las letras base A, B, C, D
+            AulaPeriodoSeeder::class,      // Depende de periodos, cursos y paralelos
+            AlumnoSeeder::class,           // Transforma las personas de prueba en estudiantes
+            MatriculaSeeder::class,        // Sienta a los alumnos en las aulas del periodo
+
+            // NÚCLEO SEGURIDAD Y MENÚS:
+            PermisoSeeder::class,
+            RolesPermisosSeeder::class,
+            MenuSeeder::class,
         ]);
     }
 
@@ -59,7 +82,6 @@ class DatabaseSeeder
             if (!class_exists($seederClass)) {
                 $file = __DIR__ . '/' . $seederClass . '.php';
                 if (file_exists($file)) {
-                    // CAMBIO CRÍTICO: require para asegurar ejecución limpia en un mismo hilo CLI
                     require $file;
                 } else {
                     echo "\e[31mError:\e[0m No se encontró el archivo para la clase [{$seederClass}]\n";

@@ -1,7 +1,5 @@
 <?php
 
-use App\Core\Faker;
-
 class TipoDocumentoSeeder
 {
     /**
