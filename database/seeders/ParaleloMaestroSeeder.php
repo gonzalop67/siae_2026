@@ -27,14 +27,14 @@ class ParaleloMaestroSeeder
         $stmtCat->close();
 
         // =====================================================================
-        // PASO 2: Poblado de la Tabla Puente (curso_paralelo_periodo)
+        // PASO 2: Poblado de la Tabla de Aulas por Periodo
         // =====================================================================
         // 1. Obtener el último periodo lectivo
         $resPeriodo = $mysqli->query("SELECT id FROM periodos_lectivos ORDER BY id DESC LIMIT 1");
         $periodo = $resPeriodo->fetch_assoc();
         $periodoId = $periodo ? (int)$periodo['id'] : 1;
 
-        // 2. 🔥 SOLUCIÓN DEFINITIVA: IDs de las letras 'A' y 'B' generadas en el PASO 1
+        // 2. IDs de las letras 'A' y 'B' generadas en el PASO 1
         $paralelosAsignar = array(1, 2); 
 
         // 3. Obtener todos los cursos configurados en tu sistema
@@ -44,19 +44,20 @@ class ParaleloMaestroSeeder
             $cursosIds[] = (int)$row['id'];
         }
 
-        // 4. 🔥 SOLUCIÓN DEFINITIVA: IDs de prueba para docentes tutores (asumiendo IDs del 1 al 5 en tu tabla usuarios)
+        // 4. IDs de prueba para docentes tutores (usuarios con roles de profesor)
         $tutores = array(1, 2, 3, 4, 5);
 
-        // 5. Preparar inserción en la tabla puente con bind_param
-        $stmtPuente = $mysqli->prepare("INSERT IGNORE INTO curso_paralelo_periodo 
-            (periodo_lectivo_id, curso_id, paralelo_id, docente_id, cupo_maximo) 
-            VALUES (?, ?, ?, ?, ?)");
+        // 5. 🔥 CORRECCIÓN CLAVE: Inclusión explícita de 'jornada' y sus 6 marcadores '?' para bind_param
+        $stmtPuente = $mysqli->prepare("INSERT IGNORE INTO aulas_periodo 
+            (periodo_lectivo_id, curso_id, paralelo_id, docente_id, cupo_maximo, jornada) 
+            VALUES (?, ?, ?, ?, ?, ?)");
 
         if (!$stmtPuente) {
-            throw new Exception("Error en tabla puente paralelos: " . $mysqli->error);
+            throw new Exception("Error en preparación de aulas_periodo: " . $mysqli->error);
         }
 
         $cupoMaximo = 40;
+        $jornadaFija = 'Matutina';
         $tutorIndex = 0;
 
         foreach ($cursosIds as $cursoId) {
@@ -65,19 +66,21 @@ class ParaleloMaestroSeeder
                 $docenteId = $tutores[$tutorIndex % count($tutores)];
                 $tutorIndex++;
 
+                // Enlazado seguro: 5 enteros ('iiiii') y 1 string ('s') = 'iiiiis'
                 $stmtPuente->bind_param(
-                    'iiiii', 
+                    'iiiiis', 
                     $periodoId, 
                     $cursoId, 
                     $paraleloId, 
                     $docenteId, 
-                    $cupoMaximo
+                    $cupoMaximo,
+                    $jornadaFija
                 );
                 $stmtPuente->execute();
             }
         }
 
         $stmtPuente->close();
-        echo "Catálogo de paralelos y asignación de tutores procesados con éxito.\n";
+        echo "Aulas del periodo escolar y asignación de tutores procesados con éxito.\n";
     }
 }

@@ -562,4 +562,48 @@ class UserController extends Controller
         }
         exit;
     }
+
+    public function roles(int $id)
+    {
+        // 1. El usuario que estamos editando
+        $usuario = $this->userModel
+            ->select('usuarios.id AS id_usuario', 
+            'persona_id', 
+            'username', 
+            'email', 
+            'password', 
+            'activo', 
+            'avatar', 
+            'personas.*')
+            ->join('personas', 'usuarios.persona_id', '=', 'personas.id')
+            ->where('usuarios.id', $id)
+            ->first();
+
+        // 2. TODOS los roles que existen en el sistema (para los checkboxes)
+        // Asumo que tienes un roleModel o tabla 'roles'
+        $roles = $this->roleModel
+            ->orderBy('nombre')
+            ->get();
+
+        // 3. Los IDs de los roles que este Usuario ya tiene asignados
+        // Esta es la simulación real de: $user->roles->pluck('id')->toArray();
+        $userRoles = $this->userModel->getRoleIds($id);
+
+        $title = "Asignación de Roles";
+
+        return $this->view('admin.usuarios.roles', compact('title', 'usuario', 'roles', 'userRoles'));
+    }
+
+    public function updateRoles(int $id)
+    {
+        // $id es el id del usuario
+        $RoleIds = $_POST['roles'];
+        $this->roleUserModel->sync($id, $RoleIds);
+
+        // Mensaje de éxito
+        $_SESSION['mensaje'] = "Roles actualizados satisfactoriamente.";
+        $_SESSION['tipo'] = "success";
+        $_SESSION['icono'] = "check";
+        redireccionar('/usuarios/' . $id . '/roles');
+    }
 }

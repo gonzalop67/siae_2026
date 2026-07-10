@@ -62,9 +62,9 @@ class DatabaseSeeder
             TipoEvaluacionSeeder::class,      // 4° Configura las macros formativas/sumativas con parciales
             MallaCurricularSeeder::class,     // 5° Distribuye horas (Depende de subniveles y asignaturas)
             ParaleloMaestroSeeder::class,     // 6° Llena catálogo 'paralelos' y la tabla puente
-            AulaPeriodoSeeder::class,         // 7° Habilita los salones físicos 
             AlumnoSeeder::class,              // 8° Vincula personas a la condición de estudiantes
             MatriculaSeeder::class,           // 9° Sienta formalmente a los alumnos en las aulas creadas
+            InsumosEvaluacionSeeder::class,   // 💡 NUEVO SEEDER AGREGADO AQUÍ
 
             // NÚCLEO SEGURIDAD Y MENÚS:
             PermisoSeeder::class,
