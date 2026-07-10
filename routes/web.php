@@ -78,4 +78,7 @@ Route::get('/menus/papelera', [MenuController::class, 'papelera'], [$authMiddlew
 Route::post('/menus/restore/:id', [MenuController::class, 'restore'], [$authMiddleware]);
 Route::post('/menus/destroy/:id', [MenuController::class, 'destroy'], [$authMiddleware]);
 
+/** Rutas para niveles */
+
+
 Route::dispatch();

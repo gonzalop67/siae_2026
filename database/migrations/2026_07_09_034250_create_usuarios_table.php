@@ -12,6 +12,7 @@ class CreateUsuariosTable extends Model
         $sql = "CREATE TABLE IF NOT EXISTS usuarios (
             id INT AUTO_INCREMENT PRIMARY KEY,
             -- Agrega tus columnas aquí
+            persona_id INT NOT NULL, -- Relación uno a uno con el catálogo maestro de personas
             username VARCHAR(64) UNIQUE,
             email VARCHAR(64) NULL,
             password VARCHAR(535),
@@ -23,7 +24,8 @@ class CreateUsuariosTable extends Model
             -- Fin tus columnas
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP NULL
+            deleted_at TIMESTAMP NULL,
+            FOREIGN KEY (persona_id) REFERENCES personas(id) ON DELETE RESTRICT
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
         $this->connection->query($sql);

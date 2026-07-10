@@ -13,8 +13,6 @@ use App\Models\Admin\RolUsuario;
 use App\Models\Admin\Nacionalidad;
 use App\Models\Admin\TipoDocumento;
 
-use Override;
-
 class UserController extends Controller
 {
     protected Role $roleModel;
@@ -24,7 +22,6 @@ class UserController extends Controller
     protected Nacionalidad $nacionalidadModel;
     protected TipoDocumento $tipoDocumentoModel;
 
-    #[Override]
     public function __construct()
     {
         parent::__construct(); // <--- ESTO ES OBLIGATORIO
@@ -75,7 +72,7 @@ class UserController extends Controller
     public function create()
     {
         $title = "Nuevo Usuario";
-        $roles = $this->roleModel->orderBy('nombre')->get();
+        $roles = $this->roleModel->orderBy('pe_nombre')->get();
         $tipos_documentos = $this->tipoDocumentoModel->orderBy('id')->get();
         $nacionalidades = $this->nacionalidadModel->orderBy('id')->get();
 

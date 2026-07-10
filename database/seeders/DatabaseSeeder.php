@@ -55,16 +55,16 @@ class DatabaseSeeder
             AdminUserSeeder::class,
             PersonasDocenteSeeder::class, // Puebla personas de prueba antes de AlumnoSeeder
 
-            // NÚCLEO CONFIGURACIÓN ACADÉMICA BASE:
-            PeriodoLectivoSeeder::class,   // Crea el año escolar, trimestres y el catálogo de tipos_evaluacion
-            CursoSeeder::class,
-            AsignaturaSeeder::class,
-            TipoEvaluacionSeeder::class,
-            MallaCurricularSeeder::class,  // Depende de cursos y asignaturas
-            ParaleloSeeder::class,         // Puebla las letras base A, B, C, D
-            AulaPeriodoSeeder::class,      // Depende de periodos, cursos y paralelos
-            AlumnoSeeder::class,           // Transforma las personas de prueba en estudiantes
-            MatriculaSeeder::class,        // Sienta a los alumnos en las aulas del periodo
+            // 🔥 CONFIGURACIÓN ACADÉMICA BASE CENTRALIZADA:
+            EstructuraEducativaSeeder::class, // 1° Inserta Niveles, Subniveles y Cursos en un solo paso limpio
+            AsignaturaSeeder::class,          // 2° Catálogo de materias troncales
+            PeriodoLectivoSeeder::class,      // 3° Abre el año escolar y los bloques académicos
+            TipoEvaluacionSeeder::class,      // 4° Configura las macros formativas/sumativas con parciales
+            MallaCurricularSeeder::class,     // 5° Distribuye horas (Depende de subniveles y asignaturas)
+            ParaleloMaestroSeeder::class,     // 6° Llena catálogo 'paralelos' y la tabla puente
+            AulaPeriodoSeeder::class,         // 7° Habilita los salones físicos 
+            AlumnoSeeder::class,              // 8° Vincula personas a la condición de estudiantes
+            MatriculaSeeder::class,           // 9° Sienta formalmente a los alumnos en las aulas creadas
 
             // NÚCLEO SEGURIDAD Y MENÚS:
             PermisoSeeder::class,

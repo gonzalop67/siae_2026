@@ -10,7 +10,6 @@ class CreateUnidadEducativaTable extends Model
     public function up(): void
     {
         $sql = "CREATE TABLE IF NOT EXISTS unidad_educativa (
-            id INT AUTO_INCREMENT PRIMARY KEY,
             -- Agrega tus columnas aquí
             admin_id INT NULL,
             nombre VARCHAR(64),
