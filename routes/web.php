@@ -4,6 +4,7 @@
 
 use App\Controllers\Admin\AdminDashboardController;
 use App\Controllers\Admin\MenuController;
+use App\Controllers\Admin\NivelController;
 use App\Controllers\Admin\PermisoController;
 use App\Controllers\Admin\RoleController;
 use App\Controllers\Admin\UserController;
@@ -35,50 +36,55 @@ Route::post('permissions/:id/update', [PermisoController::class, 'update'], [$au
 Route::post('permissions/:id/delete', [PermisoController::class, 'delete'], [$authMiddleware]);
 
 /** Rutas para Roles */
-Route::get('/roles', [RoleController::class, 'index'], [$authMiddleware]);
-Route::get('/roles/create', [RoleController::class, 'create'], [$authMiddleware]);
-Route::post('/roles', [RoleController::class, 'store'], [$authMiddleware]);
+Route::get('roles', [RoleController::class, 'index'], [$authMiddleware]);
+Route::get('roles/create', [RoleController::class, 'create'], [$authMiddleware]);
+Route::post('roles', [RoleController::class, 'store'], [$authMiddleware]);
 // Ver el listado de la papelera (GET)
-Route::get('/roles/wastebasket', [RoleController::class, 'wastebasket'], [$authMiddleware]);
-Route::post('/roles/:id/restore', [RoleController::class, 'restore'], [$authMiddleware]);
-Route::post('/roles/:id/destroy', [RoleController::class, 'destroy'], [$authMiddleware]);
+Route::get('roles/wastebasket', [RoleController::class, 'wastebasket'], [$authMiddleware]);
+Route::post('roles/:id/restore', [RoleController::class, 'restore'], [$authMiddleware]);
+Route::post('roles/:id/destroy', [RoleController::class, 'destroy'], [$authMiddleware]);
 // Rutas comunes
-Route::get('/roles/:id/edit', [RoleController::class, 'edit'], [$authMiddleware]);
-Route::post('/roles/:id/update', [RoleController::class, 'update'], [$authMiddleware]);
-Route::get('/roles/:id/permissions', [RoleController::class, 'permissions'], [$authMiddleware]);
-Route::post('/roles/:id/permissions', [RoleController::class, 'updatePermissions'], [$authMiddleware]);
+Route::get('roles/:id/edit', [RoleController::class, 'edit'], [$authMiddleware]);
+Route::post('roles/:id/update', [RoleController::class, 'update'], [$authMiddleware]);
+Route::get('roles/:id/permissions', [RoleController::class, 'permissions'], [$authMiddleware]);
+Route::post('roles/:id/permissions', [RoleController::class, 'updatePermissions'], [$authMiddleware]);
 // Ruta para la eliminación "suave"
-Route::post('/roles/:id/delete', [RoleController::class, 'delete'], [$authMiddleware]);
+Route::post('roles/:id/delete', [RoleController::class, 'delete'], [$authMiddleware]);
 
 /** Rutas para Usuarios */
-Route::get('/usuarios', [UserController::class, 'index'], [$authMiddleware]);
-Route::get('/usuarios/create', [UserController::class, 'create'], [$authMiddleware]);
-Route::post('/usuarios', [UserController::class, 'store'], [$authMiddleware]);
+Route::get('usuarios', [UserController::class, 'index'], [$authMiddleware]);
+Route::get('usuarios/create', [UserController::class, 'create'], [$authMiddleware]);
+Route::post('usuarios', [UserController::class, 'store'], [$authMiddleware]);
 // Ver el listado de la papelera (GET)
-Route::get('/usuarios/wastebasket', [UserController::class, 'wastebasket'], [$authMiddleware]);
-Route::post('/usuarios/:id/restore', [UserController::class, 'restore'], [$authMiddleware]);
-Route::post('/usuarios/:id/destroy', [UserController::class, 'destroy'], [$authMiddleware]);
+Route::get('usuarios/wastebasket', [UserController::class, 'wastebasket'], [$authMiddleware]);
+Route::post('usuarios/:id/restore', [UserController::class, 'restore'], [$authMiddleware]);
+Route::post('usuarios/:id/destroy', [UserController::class, 'destroy'], [$authMiddleware]);
 // Ruta para la eliminación "suave"
-Route::post('/usuarios/:id/delete', [UserController::class, 'delete'], [$authMiddleware]);
+Route::post('usuarios/:id/delete', [UserController::class, 'delete'], [$authMiddleware]);
 // Rutas comunes
-Route::get('/usuarios/:id/edit', [UserController::class, 'edit'], [$authMiddleware]);
-Route::post('/usuarios/:id/update', [UserController::class, 'update'], [$authMiddleware]);
-Route::get('/usuarios/:id/roles', [UserController::class, 'roles'], [$authMiddleware]);
-Route::post('/usuarios/:id/roles', [UserController::class, 'updateRoles'], [$authMiddleware]);
+Route::get('usuarios/:id/edit', [UserController::class, 'edit'], [$authMiddleware]);
+Route::post('usuarios/:id/update', [UserController::class, 'update'], [$authMiddleware]);
+Route::get('usuarios/:id/roles', [UserController::class, 'roles'], [$authMiddleware]);
+Route::post('usuarios/:id/roles', [UserController::class, 'updateRoles'], [$authMiddleware]);
 
 /** Rutas para Menús */
-Route::get('/menus', [MenuController::class, 'index'], [$authMiddleware]);
-Route::post('/menus/get_menu_ajax', [MenuController::class, 'get_menu_ajax'], [$authMiddleware]);
-Route::post('/menus/guardar_orden_ajax', [MenuController::class, 'guardar_orden_ajax'], [$authMiddleware]);
-Route::post('/menus/store', [MenuController::class, 'store'], [$authMiddleware]);
-Route::post('/menus/:id/edit', [MenuController::class, 'edit'], [$authMiddleware]);
-Route::post('/menus/update', [MenuController::class, 'update'], [$authMiddleware]);
-Route::post('/menus/delete/:id', [MenuController::class, 'delete'], [$authMiddleware]);
-Route::get('/menus/papelera', [MenuController::class, 'papelera'], [$authMiddleware]);
-Route::post('/menus/restore/:id', [MenuController::class, 'restore'], [$authMiddleware]);
-Route::post('/menus/destroy/:id', [MenuController::class, 'destroy'], [$authMiddleware]);
+Route::get('menus', [MenuController::class, 'index'], [$authMiddleware]);
+Route::post('menus/get_menu_ajax', [MenuController::class, 'get_menu_ajax'], [$authMiddleware]);
+Route::post('menus/guardar_orden_ajax', [MenuController::class, 'guardar_orden_ajax'], [$authMiddleware]);
+Route::post('menus/store', [MenuController::class, 'store'], [$authMiddleware]);
+Route::post('menus/:id/edit', [MenuController::class, 'edit'], [$authMiddleware]);
+Route::post('menus/update', [MenuController::class, 'update'], [$authMiddleware]);
+Route::post('menus/delete/:id', [MenuController::class, 'delete'], [$authMiddleware]);
+Route::get('menus/papelera', [MenuController::class, 'papelera'], [$authMiddleware]);
+Route::post('menus/restore/:id', [MenuController::class, 'restore'], [$authMiddleware]);
+Route::post('menus/destroy/:id', [MenuController::class, 'destroy'], [$authMiddleware]);
 
 /** Rutas para niveles */
-
+Route::get('niveles', [NivelController::class, 'index'], [$authMiddleware]);
+Route::get('niveles/create', [NivelController::class, 'create'], [$authMiddleware]);
+Route::post('niveles', [NivelController::class, 'store'], [$authMiddleware]);
+Route::get('niveles/:id/edit', [NivelController::class, 'edit'], [$authMiddleware]);
+Route::post('niveles/:id/update', [NivelController::class, 'update'], [$authMiddleware]);
+Route::post('niveles/:id/delete', [NivelController::class, 'delete'], [$authMiddleware]);
 
 Route::dispatch();

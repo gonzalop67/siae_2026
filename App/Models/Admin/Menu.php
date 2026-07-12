@@ -111,6 +111,26 @@ class Menu extends Model
         return false;
     }
 
+    public function obtenerSiguienteOrden(?int $padre_id): int
+    {
+        if ($padre_id === null) {
+            $sql = "SELECT COALESCE(MAX(orden), 0) + 1 AS siguiente FROM menus WHERE padre_id IS NULL AND deleted_at IS NULL";
+            $this->query($sql);
+        } else {
+            $sql = "SELECT COALESCE(MAX(orden), 0) + 1 AS siguiente FROM menus WHERE padre_id = ? AND deleted_at IS NULL";
+            $this->query($sql, [$padre_id], 'i');
+        }
+
+        // Tu método query guarda el objeto mysqli_result en $this->query
+        $resultado = $this->getQueryResult();
+        if ($resultado instanceof \mysqli_result) {
+            $fila = $resultado->fetch_assoc();
+            return (int)($fila['siguiente'] ?? 1);
+        }
+
+        return 1;
+    }
+
     public function actualizarOrdenYPadre(int $idMenu, int $padreId, int $orden)
     {
         // Ejemplo con PDO clásico:
@@ -123,5 +143,32 @@ class Menu extends Model
         $stmt->bind_param('iii', $padreId, $orden, $idMenu);
         $stmt->execute();
         $stmt->close();
+    }
+
+    public function construirMenuDinamico(array $registrosPlanos)
+    {
+        $menuEstructurado = [];
+        $referencias = [];
+
+        // 1. Crear un índice de referencia rápido por cada ID de menú
+        foreach ($registrosPlanos as $item) {
+            $item['submenus'] = []; // Inicializamos el contenedor de hijos
+            $referencias[$item['id']] = $item;
+        }
+
+        // 2. Organizar la estructura Padre e Hijo
+        foreach ($referencias as $id => &$item) {
+            if ($item['padre_id'] === null || $item['padre_id'] == 0) {
+                // Es un menú principal (Padre)
+                $menuEstructurado[] = &$item;
+            } else {
+                // Es un submenú (Hijo), lo añadimos a su padre correspondiente
+                if (isset($referencias[$item['padre_id']])) {
+                    $referencias[$item['padre_id']]['submenus'][] = &$item;
+                }
+            }
+        }
+
+        return $menuEstructurado;
     }
 }

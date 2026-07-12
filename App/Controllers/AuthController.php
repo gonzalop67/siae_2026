@@ -5,12 +5,14 @@ namespace App\Controllers;
 use Core\Encrypter;
 
 use App\Models\Admin\Role;
+use App\Models\Admin\Menu;
 use App\Models\Admin\Usuario;
 use App\Models\Admin\UsuarioRol;
 
 class AuthController extends Controller
 {
     protected Role $roleModel;
+    protected Menu $menuModel;
     protected Usuario $usuarioModel;
     protected UsuarioRol $usuarioRolModel;
 
@@ -18,6 +20,7 @@ class AuthController extends Controller
     {
         parent::__construct(); // <--- ESTO ES OBLIGATORIO
         $this->roleModel = new Role;
+        $this->menuModel = new Menu;
         $this->usuarioModel = new Usuario;
         $this->usuarioRolModel = new UsuarioRol;
     }
@@ -53,9 +56,23 @@ class AuthController extends Controller
             if (!empty($usuarioRole)) {
                 // ASEGÚRATE DE QUE session_start() se ejecutó antes
                 if (session_status() === PHP_SESSION_NONE) session_start();
+                session_regenerate_id(true);
 
                 $_SESSION['authenticated'] = true;
                 $_SESSION['us_avatar'] = $usuario['avatar'];
+
+                // 1. Consultar los menús planos autorizados mediante tu ORM
+                $menusPlanos = $this->menuModel
+                    ->select('menus.*')
+                    ->join('permisos', 'menus.permiso_slug', '=', 'permisos.slug')
+                    ->join('roles_permisos', 'permisos.id', '=', 'roles_permisos.permiso_id')
+                    ->where('roles_permisos.rol_id', $id_role)
+                    ->orderBy('menus.padre_id', 'ASC')
+                    ->orderBy('menus.orden', 'ASC')
+                    ->get();
+
+                // 2. Procesar el árbol jerárquico y guardarlo en la sesión
+                $_SESSION['menu_dinamico'] = $this->menuModel->construirMenuDinamico($menusPlanos);
 
                 // Consultar el role asociado
                 $role = $this->roleModel->where('id', $id_role)->first();

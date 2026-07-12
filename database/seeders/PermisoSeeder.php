@@ -31,6 +31,7 @@ class PermisoSeeder
             ['id' => 13, 'nombre' => 'Ver Módulos del Administrador', 'slug' => 'ver-modulos-del-administrador', 'descripcion' => 'Sólo el rol con este permiso tendrá acceso a este menú.'],
             ['id' => 14, 'nombre' => 'Listar Menús', 'slug' => 'listar-menus', 'descripcion' => 'Puede ver el listado de menús.'],
             ['id' => 15, 'nombre' => 'Admin Dashboard', 'slug' => 'admin-dashboard', 'descripcion' => 'Permite ver el dashboard del panel del Administrador.'],
+            ['id' => 16, 'nombre' => 'Ver Módulos Académico', 'slug' => 'ver-modulos-academico', 'descripcion' => 'Permite ver el menú de los módulos de administración académica.'],
         ];
 
         echo "    -> Insertando permisos base en la tabla [{$tabla}]...\n";

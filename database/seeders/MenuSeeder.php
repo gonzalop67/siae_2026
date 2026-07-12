@@ -19,12 +19,15 @@ class MenuSeeder
             // MENÚS PRINCIPALES (padre_id = null)
             ['id' => 1, 'nombre' => 'Dashboard', 'url' => 'admin/dashboard', 'icono' => 'mdi mdi-airplay', 'permiso_slug' => 'admin-dashboard', 'padre_id' => null, 'orden' => 1],
             ['id' => 2, 'nombre' => 'Administración', 'url' => '#', 'icono' => 'mdi mdi-layers', 'permiso_slug' => 'ver-modulos-del-administrador', 'padre_id' => null, 'orden' => 2],
+            ['id' => 3, 'nombre' => 'Académico', 'url' => '#', 'icono' => 'mdi mdi-school', 'permiso_slug' => 'ver-modulos-academico', 'padre_id' => null, 'orden' => 3],
             
             // SUBMENÚS DE ADMINISTRACIÓN (padre_id = 2)
-            ['id' => 3, 'nombre' => 'Permisos', 'url' => 'permisos', 'icono' => null, 'permiso_slug' => 'listar-permisos', 'padre_id' => 2, 'orden' => 1],
-            ['id' => 4, 'nombre' => 'Roles', 'url' => 'roles', 'icono' => null, 'permiso_slug' => 'listar-roles', 'padre_id' => 2,    'orden' => 2],
-            ['id' => 5, 'nombre' => 'Usuarios', 'url' => 'usuarios', 'icono' => null, 'permiso_slug' => 'listar-usuarios', 'padre_id' => 2, 'orden' => 3],
-            ['id' => 6, 'nombre' => 'Menús', 'url' => 'menus', 'icono' => null, 'permiso_slug' => 'listar-menus', 'padre_id' => 2, 'orden' => 4]
+            ['id' => 4, 'nombre' => 'Permisos', 'url' => 'permisos', 'icono' => null, 'permiso_slug' => 'listar-permisos', 'padre_id' => 2, 'orden' => 1],
+            ['id' => 5, 'nombre' => 'Roles', 'url' => 'roles', 'icono' => null, 'permiso_slug' => 'listar-roles', 'padre_id' => 2,    'orden' => 2],
+            ['id' => 6, 'nombre' => 'Usuarios', 'url' => 'usuarios', 'icono' => null, 'permiso_slug' => 'listar-usuarios', 'padre_id' => 2, 'orden' => 3],
+            ['id' => 7, 'nombre' => 'Menús', 'url' => 'menus', 'icono' => null, 'permiso_slug' => 'listar-menus', 'padre_id' => 2, 'orden' => 4]
+
+            //SUBMENÚS DE ACADÉMICO (padre_id = 3)
         ];
 
         echo "    -> Insertando menús base en la tabla [{$tabla}]...\n";

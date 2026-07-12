@@ -9,19 +9,32 @@ class CreatePermisosTable extends Model
      */
     public function up(): void
     {
-        $sql = "CREATE TABLE IF NOT EXISTS permisos (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            -- Agrega tus columnas aquí
+        // 1. Limpieza preventiva y desactivación temporal de restricciones
+        $this->connection->query("SET FOREIGN_KEY_CHECKS = 0;");
+        $this->connection->query("DROP TABLE IF EXISTS permisos;");
+
+        // 2. Creación estructural homogénea compatible con la tabla 'menus'
+        $sql = "CREATE TABLE permisos (
+            id INT(11) AUTO_INCREMENT PRIMARY KEY,
             nombre VARCHAR(50) NOT NULL UNIQUE,
-            slug VARCHAR(50) NOT NULL UNIQUE,
-            descripcion VARCHAR(100) NULL,
-            -- Fin tus columnas
+            
+            -- 💡 ALINEACIÓN: Cambiado a VARCHAR(100) para acoplarse con la FK de la tabla menus
+            slug VARCHAR(100) NOT NULL UNIQUE, 
+            
+            descripcion VARCHAR(100) NULL DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            deleted_at TIMESTAMP NULL
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+            deleted_at TIMESTAMP NULL DEFAULT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
-        $this->connection->query($sql);
+        if (!$this->connection->query($sql)) {
+            $error = $this->connection->error;
+            $this->connection->query("SET FOREIGN_KEY_CHECKS = 1;");
+            throw new \mysqli_sql_exception("Error crítico al estructurar la tabla permisos: " . $error);
+        }
+
+        // 3. Reactivación de restricciones
+        $this->connection->query("SET FOREIGN_KEY_CHECKS = 1;");
     }
 
     /**

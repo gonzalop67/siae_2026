@@ -65,13 +65,16 @@ class MenuController extends Controller
             exit;
         }
 
+        // 💡 PASO CLAVE: Calcular dinámicamente el siguiente número en el orden
+        $siguienteOrden = $this->menuModel->obtenerSiguienteOrden($padre_id);
+
         $data = [
             'nombre'       => $nombre,
             'url'          => $url,
             'icono'        => $icono,
             'permiso_slug' => $permiso_slug,
             'padre_id'     => $padre_id,
-            'orden'        => 0
+            'orden'        => $siguienteOrden // ◄ Asignamos el secuencial calculado
         ];
 
         // Llamamos a tu método nativo 'create'
