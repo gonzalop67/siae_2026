@@ -18,6 +18,7 @@ class CreateSubnivelesEducativosTable extends Model
             id INT(11) AUTO_INCREMENT PRIMARY KEY,
             nivel_id INT(11) NOT NULL,
             nombre VARCHAR(100) NOT NULL, 
+            orden INT(11) DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             deleted_at TIMESTAMP NULL DEFAULT NULL,

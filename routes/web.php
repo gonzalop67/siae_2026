@@ -7,6 +7,7 @@ use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\NivelController;
 use App\Controllers\Admin\PermisoController;
 use App\Controllers\Admin\RoleController;
+use App\Controllers\Admin\SubnivelController;
 use App\Controllers\Admin\UserController;
 use App\Controllers\AuthController;
 
@@ -79,12 +80,27 @@ Route::get('menus/papelera', [MenuController::class, 'papelera'], [$authMiddlewa
 Route::post('menus/restore/:id', [MenuController::class, 'restore'], [$authMiddleware]);
 Route::post('menus/destroy/:id', [MenuController::class, 'destroy'], [$authMiddleware]);
 
-/** Rutas para niveles */
-Route::get('niveles', [NivelController::class, 'index'], [$authMiddleware]);
-Route::get('niveles/create', [NivelController::class, 'create'], [$authMiddleware]);
-Route::post('niveles', [NivelController::class, 'store'], [$authMiddleware]);
-Route::get('niveles/:id/edit', [NivelController::class, 'edit'], [$authMiddleware]);
-Route::post('niveles/:id/update', [NivelController::class, 'update'], [$authMiddleware]);
-Route::post('niveles/:id/delete', [NivelController::class, 'delete'], [$authMiddleware]);
+/** Rutas para niveles */ 
+Route::get('niveles', [NivelController::class, 'index'], [$authMiddleware]); 
+Route::get('niveles/create', [NivelController::class, 'create'], [$authMiddleware]); 
+Route::post('niveles', [NivelController::class, 'store'], [$authMiddleware]); 
+Route::get('niveles/:id/datos-ajax', [NivelController::class, 'obtenerDatosAjax'], [$authMiddleware]);
+Route::get('niveles/:id/edit', [NivelController::class, 'edit'], [$authMiddleware]); 
+Route::post('niveles/:id/actualizar-ajax', [NivelController::class, 'actualizarDatosAjax'], [$authMiddleware]);
+Route::post('niveles/:id/update', [NivelController::class, 'update'], [$authMiddleware]); 
+Route::post('niveles/:id/delete', [NivelController::class, 'delete'], [$authMiddleware]); 
 
+/** Rutas para subniveles */ 
+Route::get('subniveles', [SubnivelController::class, 'index'], [$authMiddleware]); 
+
+// 💡 1. RUTA CRÍTICA MIGRADA AQUÍ: Debe ir antes de cualquier parámetro ":id" para evitar colisiones
+Route::get('subniveles/tabla-html', [SubnivelController::class, 'obtenerTablaHtml'], [$authMiddleware]); 
+
+// 2. Rutas basadas en comodines dinámicos (Evaluadas de forma secundaria)
+Route::post('subniveles', [SubnivelController::class, 'store'], [$authMiddleware]); 
+Route::get('subniveles/:id/edit', [SubnivelController::class, 'edit'], [$authMiddleware]); 
+Route::post('subniveles/:id/update', [SubnivelController::class, 'update'], [$authMiddleware]); 
+Route::post('subniveles/:id/delete', [SubnivelController::class, 'delete'], [$authMiddleware]); 
+
+// Despachador global de la aplicación
 Route::dispatch();

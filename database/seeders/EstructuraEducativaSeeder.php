@@ -27,16 +27,16 @@ class EstructuraEducativaSeeder
         // 2. INSERCIÓN DE SUBNIVELES (Mapeados a sus niveles)
         // ==========================================
         $subniveles = [
-            ['id' => 1, 'nivel_id' => 2, 'nombre' => 'Preparatoria'],  // 1° EGB
-            ['id' => 2, 'nivel_id' => 2, 'nombre' => 'Elemental'],     // 2°, 3°, 4° EGB
-            ['id' => 3, 'nivel_id' => 2, 'nombre' => 'Media'],         // 5°, 6°, 7° EGB
-            ['id' => 4, 'nivel_id' => 2, 'nombre' => 'Superior'],      // 8°, 9°, 10° EGB
-            ['id' => 5, 'nivel_id' => 3, 'nombre' => 'Bachillerato General Unificado'] // 1°, 2°, 3° BGU
+            ['id' => 1, 'nivel_id' => 2, 'nombre' => 'Preparatoria', 'orden' => 1],  // 1° EGB
+            ['id' => 2, 'nivel_id' => 2, 'nombre' => 'Elemental', 'orden' => 2],     // 2°, 3°, 4° EGB
+            ['id' => 3, 'nivel_id' => 2, 'nombre' => 'Media', 'orden' => 3],         // 5°, 6°, 7° EGB
+            ['id' => 4, 'nivel_id' => 2, 'nombre' => 'Superior', 'orden' => 4],      // 8°, 9°, 10° EGB
+            ['id' => 5, 'nivel_id' => 3, 'nombre' => 'Bachillerato General Unificado', 'orden' => 1] // 1°, 2°, 3° BGU
         ];
 
-        $stmtSub = $mysqli->prepare("INSERT IGNORE INTO subniveles_educativos (id, nivel_id, nombre) VALUES (?, ?, ?)");
+        $stmtSub = $mysqli->prepare("INSERT IGNORE INTO subniveles_educativos (id, nivel_id, nombre, orden) VALUES (?, ?, ?, ?)");
         foreach ($subniveles as $sub) {
-            $stmtSub->bind_param('iis', $sub['id'], $sub['nivel_id'], $sub['nombre']);
+            $stmtSub->bind_param('iis', $sub['id'], $sub['nivel_id'], $sub['nombre'], $sub['orden']);
             $stmtSub->execute();
         }
         $stmtSub->close();

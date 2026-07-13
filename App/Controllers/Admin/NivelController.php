@@ -89,6 +89,18 @@ class NivelController extends Controller
     }
 
     /**
+     * Devuelve los datos del nivel en formato JSON para consumo AJAX.
+     */
+    public function obtenerDatosAjax(string $id)
+    {
+        $nivel = $this->nivelModel->find((int)$id);
+        if (!$nivel) {
+            return ['ok' => false, 'mensaje' => 'Nivel no encontrado.'];
+        }
+        return ['ok' => true, 'data' => $nivel];
+    }
+
+    /**
      * Muestra el formulario para editar un recurso específico.
      */
     public function edit(int $id)
@@ -178,5 +190,61 @@ class NivelController extends Controller
             ]);
         }
         exit; // Detiene la ejecución para que solo devuelva el JSON
+    }
+
+    /**
+     * Procesa la actualización del nivel educativo principal mediante AJAX.
+     * @param string|int $id Inyectado desde el enrutador
+     */
+    public function actualizarDatosAjax($id)
+    {
+        $id = (int)$id;
+
+        if ($id <= 0) {
+            return ['ok' => false, 'mensaje' => 'ID de nivel no válido.'];
+        }
+
+        // Capturar inputs enviados por el formulario
+        $input = $_POST ?? [];
+        $nombre = trim($input['nombre'] ?? '');
+
+        // Validaciones básicas de negocio
+        $errores = [];
+        if (empty($nombre)) {
+            $errores['nombre'] = 'El campo nombre del nivel es obligatorio.';
+        } elseif (strlen($nombre) < 3 || strlen($nombre) > 64) {
+            $errores['nombre'] = 'El nombre del nivel debe tener entre 3 y 64 caracteres.';
+        }
+
+        // Si hay errores de formato, regresamos la lista estructurada para el frontend
+        if (!empty($errores)) {
+            return ['ok' => false, 'errors' => $errores];
+        }
+
+        // Verificar existencia en la base de datos
+        $nivelExistente = $this->nivelModel->find($id);
+        if (!$nivelExistente) {
+            return ['ok' => false, 'mensaje' => 'El nivel educativo no existe o fue eliminado.'];
+        }
+
+        try {
+            $this->nivelModel->beginTransaction();
+
+            // Actualizamos usando el ORM de tu framework
+            $this->nivelModel->update($id, ['nombre' => $nombre]);
+
+            $this->nivelModel->commit();
+
+            return [
+                'ok' => true,
+                'mensaje' => 'El nivel educativo principal ha sido actualizado con éxito.'
+            ];
+        } catch (\Throwable $e) {
+            $this->nivelModel->rollBack();
+            return [
+                'ok' => false,
+                'mensaje' => 'Error crítico en la base de datos: ' . $e->getMessage()
+            ];
+        }
     }
 }
