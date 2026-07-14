@@ -18,12 +18,11 @@
 
     <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
 
-    @yield('styles')
-
     <link href="<?= RUTA_URL ?>/public/assets/Annex/css/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="<?= RUTA_URL ?>/public/assets/Annex/css/icons.css" rel="stylesheet" type="text/css">
     <link href="<?= RUTA_URL ?>/public/assets/Annex/css/style.css" rel="stylesheet" type="text/css">
-
+    
+    @yield('styles')
 </head>
 
 <body class="fixed-left">

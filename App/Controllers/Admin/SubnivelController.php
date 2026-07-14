@@ -53,6 +53,18 @@ class SubnivelController extends Controller
     }
 
     /**
+     * Devuelve los datos del nivel en formato JSON para consumo AJAX.
+     */
+    public function obtenerDatosAjax(string $id)
+    {
+        $subnivel = $this->subnivelModel->find((int)$id);
+        if (!$subnivel) {
+            return ['ok' => false, 'mensaje' => 'Subnivel no encontrado.'];
+        }
+        return ['ok' => true, 'data' => $subnivel];
+    }
+
+    /**
      * Almacena un recurso recién creado en la base de datos.
      */
     public function store()

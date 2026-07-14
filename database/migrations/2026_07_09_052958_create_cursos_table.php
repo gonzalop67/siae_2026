@@ -19,6 +19,7 @@ class CreateCursosTable extends Model
             subnivel_id INT(11) NOT NULL,
             nombre VARCHAR(100) NOT NULL, 
             seccion ENUM('Matutina', 'Vespertina', 'Nocturna') NOT NULL DEFAULT 'Matutina',
+            orden INT(11) DEFAULT 0,
             
             -- Clave foránea con alias explícito y cascada de actualización
             CONSTRAINT fk_cursos_subnivel FOREIGN KEY (subnivel_id) REFERENCES subniveles_educativos(id) ON DELETE RESTRICT ON UPDATE CASCADE

@@ -3,6 +3,7 @@
 // Definir rutas
 
 use App\Controllers\Admin\AdminDashboardController;
+use App\Controllers\Admin\CursoController;
 use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\NivelController;
 use App\Controllers\Admin\PermisoController;
@@ -92,15 +93,25 @@ Route::post('niveles/:id/delete', [NivelController::class, 'delete'], [$authMidd
 
 /** Rutas para subniveles */ 
 Route::get('subniveles', [SubnivelController::class, 'index'], [$authMiddleware]); 
-
 // 💡 1. RUTA CRÍTICA MIGRADA AQUÍ: Debe ir antes de cualquier parámetro ":id" para evitar colisiones
 Route::get('subniveles/tabla-html', [SubnivelController::class, 'obtenerTablaHtml'], [$authMiddleware]); 
-
 // 2. Rutas basadas en comodines dinámicos (Evaluadas de forma secundaria)
 Route::post('subniveles', [SubnivelController::class, 'store'], [$authMiddleware]); 
+Route::get('subniveles/:id/datos-ajax', [SubnivelController::class, 'obtenerDatosAjax'], [$authMiddleware]);
 Route::get('subniveles/:id/edit', [SubnivelController::class, 'edit'], [$authMiddleware]); 
 Route::post('subniveles/:id/update', [SubnivelController::class, 'update'], [$authMiddleware]); 
 Route::post('subniveles/:id/delete', [SubnivelController::class, 'delete'], [$authMiddleware]); 
+
+/** Rutas para cursos */
+Route::get('cursos', [CursoController::class, 'index'], [$authMiddleware]);          // Listar todos
+// 💡 REGISTRAR ANTES de las rutas con parámetros dinámicos (:id)
+Route::get('cursos/tabla-html', [CursoController::class, 'tablaHtml'], [$authMiddleware]);
+Route::post('cursos', [CursoController::class, 'store'], [$authMiddleware]);         // Crear
+Route::get('cursos/:id', [CursoController::class, 'obtenerDatosAjax'], [$authMiddleware]);
+Route::post('cursos/:id/update', [CursoController::class, 'update'], [$authMiddleware]); // Actualizar (vía POST)
+Route::post('cursos/:id/delete', [CursoController::class, 'delete'], [$authMiddleware]); // Eliminar (vía POST)
+
+/** Rutas para asignaturas */
 
 // Despachador global de la aplicación
 Route::dispatch();

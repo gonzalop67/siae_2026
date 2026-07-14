@@ -46,7 +46,7 @@ class Nivel extends Model
      */
     public function obtenerConSubniveles(): array
     {
-        // 1. PRIMERA CONSULTA: Obtener todos los niveles ordenados por nombre
+        // 1. PRIMERA CONSULTA: Obtener todos los niveles ordenados por id
         $niveles = $this->orderBy('id', 'ASC')->get();
 
         if (empty($niveles)) {
