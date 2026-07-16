@@ -31,6 +31,7 @@ class DatabaseSeeder
             $mysqli->query("TRUNCATE TABLE `periodos_academicos`;");
             $mysqli->query("TRUNCATE TABLE `tipos_evaluacion`;");
             $mysqli->query("TRUNCATE TABLE `cursos`;");
+            $mysqli->query("TRUNCATE TABLE `areas`;");
             $mysqli->query("TRUNCATE TABLE `asignaturas`;");
             $mysqli->query("TRUNCATE TABLE `malla_curricular`;");
             $mysqli->query("TRUNCATE TABLE `paralelos`;");
@@ -57,11 +58,12 @@ class DatabaseSeeder
 
             // 🔥 CONFIGURACIÓN ACADÉMICA BASE CENTRALIZADA:
             EstructuraEducativaSeeder::class, // 1° Inserta Niveles, Subniveles y Cursos en un solo paso limpio
-            AsignaturaSeeder::class,          // 2° Catálogo de materias troncales
-            PeriodoLectivoSeeder::class,      // 3° Abre el año escolar y los bloques académicos
-            TipoEvaluacionSeeder::class,      // 4° Configura las macros formativas/sumativas con parciales
-            MallaCurricularSeeder::class,     // 5° Distribuye horas (Depende de subniveles y asignaturas)
-            ParaleloMaestroSeeder::class,     // 6° Llena catálogo 'paralelos' y la tabla puente
+            AreaSeeder::class,                // 2° Catálogo de materias troncales
+            AsignaturaSeeder::class,          // 3° Catálogo de materias troncales
+            PeriodoLectivoSeeder::class,      // 4° Abre el año escolar y los bloques académicos
+            TipoEvaluacionSeeder::class,      // 5° Configura las macros formativas/sumativas con parciales
+            MallaCurricularSeeder::class,     // 6° Distribuye horas (Depende de subniveles y asignaturas)
+            ParaleloMaestroSeeder::class,     // 7° Llena catálogo 'paralelos' y la tabla puente
             AlumnoSeeder::class,              // 8° Vincula personas a la condición de estudiantes
             MatriculaSeeder::class,           // 9° Sienta formalmente a los alumnos en las aulas creadas
             InsumosEvaluacionSeeder::class,   // 💡 NUEVO SEEDER AGREGADO AQUÍ

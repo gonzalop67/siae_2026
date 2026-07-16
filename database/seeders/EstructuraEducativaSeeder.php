@@ -36,7 +36,7 @@ class EstructuraEducativaSeeder
 
         $stmtSub = $mysqli->prepare("INSERT IGNORE INTO subniveles_educativos (id, nivel_id, nombre, orden) VALUES (?, ?, ?, ?)");
         foreach ($subniveles as $sub) {
-            $stmtSub->bind_param('iis', $sub['id'], $sub['nivel_id'], $sub['nombre'], $sub['orden']);
+            $stmtSub->bind_param('iisi', $sub['id'], $sub['nivel_id'], $sub['nombre'], $sub['orden']);
             $stmtSub->execute();
         }
         $stmtSub->close();

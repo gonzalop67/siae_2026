@@ -25,9 +25,13 @@ class MenuSeeder
             ['id' => 4, 'nombre' => 'Permisos', 'url' => 'permisos', 'icono' => null, 'permiso_slug' => 'listar-permisos', 'padre_id' => 2, 'orden' => 1],
             ['id' => 5, 'nombre' => 'Roles', 'url' => 'roles', 'icono' => null, 'permiso_slug' => 'listar-roles', 'padre_id' => 2,    'orden' => 2],
             ['id' => 6, 'nombre' => 'Usuarios', 'url' => 'usuarios', 'icono' => null, 'permiso_slug' => 'listar-usuarios', 'padre_id' => 2, 'orden' => 3],
-            ['id' => 7, 'nombre' => 'Menús', 'url' => 'menus', 'icono' => null, 'permiso_slug' => 'listar-menus', 'padre_id' => 2, 'orden' => 4]
+            ['id' => 7, 'nombre' => 'Menús', 'url' => 'menus', 'icono' => null, 'permiso_slug' => 'listar-menus', 'padre_id' => 2, 'orden' => 4],
 
             //SUBMENÚS DE ACADÉMICO (padre_id = 3)
+            ['id' => 8, 'nombre' => 'Niveles', 'url' => 'niveles', 'icono' => null, 'permiso_slug' => 'listar-niveles-academicos', 'padre_id' => 3, 'orden' => 1],
+            ['id' => 9, 'nombre' => 'Subniveles', 'url' => 'subniveles', 'icono' => null, 'permiso_slug' => 'listar-subniveles-academicos', 'padre_id' => 3, 'orden' => 2],
+            ['id' => 10, 'nombre' => 'Cursos', 'url' => 'cursos', 'icono' => null, 'permiso_slug' => 'listar-cursos', 'padre_id' => 3, 'orden' => 3],
+            ['id' => 11, 'nombre' => 'Asignaturas', 'url' => 'asignaturas', 'icono' => null, 'permiso_slug' => 'listar-asignaturas', 'padre_id' => 3, 'orden' => 4]
         ];
 
         echo "    -> Insertando menús base en la tabla [{$tabla}]...\n";

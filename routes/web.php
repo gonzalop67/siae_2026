@@ -3,6 +3,7 @@
 // Definir rutas
 
 use App\Controllers\Admin\AdminDashboardController;
+use App\Controllers\Admin\AsignaturaController;
 use App\Controllers\Admin\CursoController;
 use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\NivelController;
@@ -112,6 +113,7 @@ Route::post('cursos/:id/update', [CursoController::class, 'update'], [$authMiddl
 Route::post('cursos/:id/delete', [CursoController::class, 'delete'], [$authMiddleware]); // Eliminar (vía POST)
 
 /** Rutas para asignaturas */
+Route::get('asignaturas', [AsignaturaController::class, 'index'], [$authMiddleware]);
 
 // Despachador global de la aplicación
 Route::dispatch();
