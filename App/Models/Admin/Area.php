@@ -16,5 +16,5 @@ class Area extends Model
     ];
 
     // Activa o desactiva el Soft Delete según tus necesidades en la tabla
-    protected bool $useSoftDeletes = true; 
+    protected bool $useSoftDeletes = false; 
 }

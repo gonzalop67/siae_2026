@@ -3,6 +3,7 @@
 // Definir rutas
 
 use App\Controllers\Admin\AdminDashboardController;
+use App\Controllers\Admin\AreaController;
 use App\Controllers\Admin\AsignaturaController;
 use App\Controllers\Admin\CursoController;
 use App\Controllers\Admin\MenuController;
@@ -112,8 +113,16 @@ Route::get('cursos/:id', [CursoController::class, 'obtenerDatosAjax'], [$authMid
 Route::post('cursos/:id/update', [CursoController::class, 'update'], [$authMiddleware]); // Actualizar (vía POST)
 Route::post('cursos/:id/delete', [CursoController::class, 'delete'], [$authMiddleware]); // Eliminar (vía POST)
 
+/** Rutas para áreas */
+Route::post('areas', [AreaController::class, 'store'], [$authMiddleware]);         // Crear
+Route::post('areas/:id/update', [AreaController::class, 'update'], [$authMiddleware]); // Actualizar (vía POST)
+Route::post('areas/:id/delete', [AreaController::class, 'delete'], [$authMiddleware]); // Eliminar (vía POST)
+
 /** Rutas para asignaturas */
 Route::get('asignaturas', [AsignaturaController::class, 'index'], [$authMiddleware]);
+Route::post('asignaturas', [AsignaturaController::class, 'store'], [$authMiddleware]);         // Crear
+Route::post('asignaturas/:id/update', [AsignaturaController::class, 'update'], [$authMiddleware]); // Actualizar (vía POST)
+Route::post('asignaturas/:id/delete', [AsignaturaController::class, 'delete'], [$authMiddleware]); // Eliminar (vía POST)
 
 // Despachador global de la aplicación
 Route::dispatch();
