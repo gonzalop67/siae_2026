@@ -29,6 +29,7 @@ class DatabaseSeeder
             // NÚCLEO ACADÉMICO: Añadidos todos los truncates correspondientes para limpiar el lote
             $mysqli->query("TRUNCATE TABLE `periodos_lectivos`;");
             $mysqli->query("TRUNCATE TABLE `periodos_academicos`;");
+            $mysqli->query("TRUNCATE TABLE `parciales_evaluacion`;");
             $mysqli->query("TRUNCATE TABLE `tipos_evaluacion`;");
             $mysqli->query("TRUNCATE TABLE `cursos`;");
             $mysqli->query("TRUNCATE TABLE `areas`;");
@@ -49,6 +50,7 @@ class DatabaseSeeder
 
         // Ejecución secuencial de los seeders (Respetando la jerarquía de dependencias)
         $this->call($mysqli, [
+            // 1. Catálogos base e infraestructura institucional
             RolSeeder::class,
             TipoDocumentoSeeder::class,
             NacionalidadSeeder::class,
@@ -61,12 +63,14 @@ class DatabaseSeeder
             AreaSeeder::class,                // 2° Catálogo de materias troncales
             AsignaturaSeeder::class,          // 3° Catálogo de materias troncales
             PeriodoLectivoSeeder::class,      // 4° Abre el año escolar y los bloques académicos
-            TipoEvaluacionSeeder::class,      // 5° Configura las macros formativas/sumativas con parciales
-            MallaCurricularSeeder::class,     // 6° Distribuye horas (Depende de subniveles y asignaturas)
-            ParaleloMaestroSeeder::class,     // 7° Llena catálogo 'paralelos' y la tabla puente
-            AlumnoSeeder::class,              // 8° Vincula personas a la condición de estudiantes
-            MatriculaSeeder::class,           // 9° Sienta formalmente a los alumnos en las aulas creadas
+            ParcialEvaluacionSeeder::class,   // 5° Configura los parciales de evaluación
+            TipoEvaluacionSeeder::class,      // 6° Configura las macros formativas/sumativas con parciales
+            MallaCurricularSeeder::class,     // 7° Distribuye horas (Depende de subniveles y asignaturas)
+            ParaleloMaestroSeeder::class,     // 8° Llena catálogo 'paralelos' y la tabla puente
+            AlumnoSeeder::class,              // 9° Vincula personas a la condición de estudiantes
+            MatriculaSeeder::class,           // 10° Sienta formalmente a los alumnos en las aulas creadas
             InsumosEvaluacionSeeder::class,   // 💡 NUEVO SEEDER AGREGADO AQUÍ
+            CalificacionesEstudiantesSeeder::class, // CALIFICACIONES (Último paso del flujo transaccional)
 
             // NÚCLEO SEGURIDAD Y MENÚS:
             PermisoSeeder::class,

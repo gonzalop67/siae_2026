@@ -8,7 +8,7 @@
                     <div class="card-header d-flex justify-content-between">
                         <h5><strong>Nuevo Permiso</strong></h5>
                         <div>
-                            <a href="{{ RUTA_URL }}/permissions" class="btn-volver">Volver al Listado de Permisos</a>
+                            <a href="{{ RUTA_URL }}/permisos" class="btn-volver">Volver al Listado de Permisos</a>
                         </div>
                     </div>
                     <div class="card-body">

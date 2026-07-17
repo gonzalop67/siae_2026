@@ -15,12 +15,12 @@
 
                     <!-- Contenedor para los botones (Modificado: Botón para volver a la lista principal) -->
                     <div class="d-flex align-items-center">
-                        <a href="<?= RUTA_URL ?>/permissions" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i>
+                        <a href="<?= RUTA_URL ?>/permisos" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i>
                             Volver a Permisos</a>
                     </div>
 
                     <!-- Formulario de búsqueda (Modificado: Apunta a la ruta de la papelera) -->
-                    <form action="<?= RUTA_URL ?>/permissions/wastebasket" class="form-inline" permiso="search">
+                    <form action="<?= RUTA_URL ?>/permisos/wastebasket" class="form-inline" permiso="search">
                         <input class="form-control form-control-sm mr-2" type="search" name="search"
                             value="{{ $search }}" placeholder="Buscar en papelera..." aria-label="Search">
                         <button class="btn btn-outline-primary btn-sm" type="submit">Buscar</button>
@@ -95,7 +95,7 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`${base_url}/permissions/${idPermiso}/restore`, {
+                    fetch(`${base_url}/permisos/${idPermiso}/restore`, {
                             method: 'POST',
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'
@@ -127,7 +127,7 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch(`${base_url}/permissions/${idPermiso}/destroy`, {
+                    fetch(`${base_url}/permisos/${idPermiso}/destroy`, {
                             method: 'POST',
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'

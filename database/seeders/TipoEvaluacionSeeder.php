@@ -1,28 +1,44 @@
-<?php
-
-use Core\Faker;
-
-class TipoEvaluacionSeeder
-{
+<?php 
+class TipoEvaluacionSeeder {
     /**
      * Ejecuta el seeder para poblar la base de datos.
-     *
+     * 
      * @param mysqli $mysqli Conexión nativa a la base de datos.
      * @return void
      */
-    public function run(mysqli $mysqli)
-    {
+    public function run(mysqli $mysqli) {
         // 1. Obtener el ID del periodo lectivo más reciente
-        $result = $mysqli->query("SELECT id FROM periodos_lectivos ORDER BY id DESC LIMIT 1");
-        $periodo = $result->fetch_assoc();
-
+        $resultPeriodo = $mysqli->query("SELECT id FROM periodos_lectivos ORDER BY id DESC LIMIT 1");
+        $periodo = $resultPeriodo->fetch_assoc();
+        
         if (!$periodo) {
             throw new Exception("Error: No se encontró ningún registro en la tabla 'periodos_lectivos'. Ejecuta su seeder primero.");
         }
-
         $periodoLectivoId = (int)$periodo['id'];
 
-        // 2. Definición del catálogo maestro bajo el modelo MINEDUC
+        // 2. NUEVO: Obtener todos los parciales asociados a los periodos académicos de este año lectivo
+        $queryParciales = "
+            SELECT p.id 
+            FROM parciales_evaluacion p
+            INNER JOIN periodos_academicos a ON p.periodo_academico_id = a.id
+            WHERE a.periodo_lectivo_id = ? AND p.deleted_at IS NULL
+        ";
+        $stmtParciales = $mysqli->prepare($queryParciales);
+        $stmtParciales->bind_param('i', $periodoLectivoId);
+        $stmtParciales->execute();
+        $resParciales = $stmtParciales->get_result();
+        
+        $parcialesIds = [];
+        while ($row = $resParciales->fetch_assoc()) {
+            $parcialesIds[] = (int)$row['id'];
+        }
+        $stmtParciales->close();
+
+        if (empty($parcialesIds)) {
+            throw new Exception("Error: No se encontraron parciales para este periodo lectivo. Ejecuta el seeder de 'periodos_academicos' y 'parciales_evaluacion' primero.");
+        }
+
+        // 3. Catálogo maestro bajo el modelo MINEDUC (Misma lógica, estructura limpia)
         $tiposEvaluacion = [
             // EJE FORMATIVO (70%)
             [
@@ -52,28 +68,34 @@ class TipoEvaluacionSeeder
             ]
         ];
 
-        // 3. Sentencia preparada con INSERT IGNORE para respetar la restricción UNIQUE KEY
-        $stmt = $mysqli->prepare("INSERT IGNORE INTO tipos_evaluacion 
-            (periodo_lectivo_id, macro_categoria, nombre, ponderacion_macro, descripcion) 
-            VALUES (?, ?, ?, ?, ?)");
-
-        if (!$stmt) {
+        // 4. Sentencia preparada con la nueva columna 'parcial_evaluacion_id'
+        $queryInsert = "
+            INSERT IGNORE INTO tipos_evaluacion 
+            (periodo_lectivo_id, parcial_evaluacion_id, macro_categoria, nombre, ponderacion_macro, descripcion) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ";
+        $stmtInsert = $mysqli->prepare($queryInsert);
+        
+        if (!$stmtInsert) {
             throw new Exception("Error en la preparación de la consulta: " . $mysqli->error);
         }
 
-        // 4. Recorrer e insertar los registros de forma segura
-        foreach ($tiposEvaluacion as $tipo) {
-            $stmt->bind_param(
-                'issds', 
-                $periodoLectivoId, 
-                $tipo['macro'], 
-                $tipo['nombre'], 
-                $tipo['ponderacion'], 
-                $tipo['desc']
-            );
-            $stmt->execute();
+        // 5. Recorrer cada parcial de la base de datos e insertar sus tipos de evaluación correspondientes
+        foreach ($parcialesIds as $parcialId) {
+            foreach ($tiposEvaluacion as $tipo) {
+                $stmtInsert->bind_param(
+                    'iissds',
+                    $periodoLectivoId,
+                    $parcialId,        // Se vincula dinámicamente al ID del parcial real
+                    $tipo['macro'],
+                    $tipo['nombre'],
+                    $tipo['ponderacion'],
+                    $tipo['desc']
+                );
+                $stmtInsert->execute();
+            }
         }
 
-        $stmt->close();
+        $stmtInsert->close();
     }
 }

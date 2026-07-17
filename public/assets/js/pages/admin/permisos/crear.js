@@ -59,8 +59,8 @@ async function fntProcesar() {
   
   // Construimos la ruta asegurando la consistencia de las barras
   const urlPath = esActualizar
-    ? `permissions/${inputIdPermiso.value}/update`
-    : 'permissions';
+    ? `permisos/${inputIdPermiso.value}/update`
+    : 'permisos';
 
   // Combinación limpia sin duplicar barras diagonales
   const urlLimpia = `${base_url}/${urlPath}`;
@@ -106,7 +106,7 @@ async function fntProcesar() {
         showConfirmButton: false
       }).then(() => {
         formulario.reset();
-        window.location.href = base_url + '/permissions';
+        window.location.href = base_url + '/permisos';
       });
     } else if (json.errors) {
       Object.keys(json.errors).forEach((campo) => {

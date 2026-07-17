@@ -17,13 +17,13 @@
                     <div class="d-flex align-items-center">
 
                         <!-- Se cambió me-3 por mr-3 (Bootstrap 4) y se quitó el mb-3 para alinearlos bien -->
-                        <a href="<?= RUTA_URL ?>/permissions/create" class="btn btn-primary btn-sm mr-1"><i class="fa-solid fa-user-gear"></i> Nuevo Permiso</a>
-                        <a href="<?= RUTA_URL ?>/permissions/wastebasket" class="btn btn-danger btn-sm"><i
+                        <a href="<?= RUTA_URL ?>/permisos/create" class="btn btn-primary btn-sm mr-1"><i class="fa-solid fa-user-gear"></i> Nuevo Permiso</a>
+                        <a href="<?= RUTA_URL ?>/permisos/wastebasket" class="btn btn-danger btn-sm"><i
                             class="fa-solid fa-trash"></i> Papelera</a>
                     </div>
 
                     <!-- Formulario de búsqueda (Alineado a la derecha) -->
-                    <form action="<?= RUTA_URL ?>/permissions" class="form-inline" role="search">
+                    <form action="<?= RUTA_URL ?>/permisos" class="form-inline" role="search">
                         <!-- Se cambió me-2 por mr-2 (Bootstrap 4) -->
                         <input class="form-control form-control-sm mr-2" type="search" name="search"
                             value="<?php echo htmlspecialchars((string)($search), ENT_QUOTES, "UTF-8"); ?>" placeholder="Permiso a buscar..." aria-label="Search">
@@ -60,7 +60,7 @@
                                     <td><?php echo htmlspecialchars((string)($permiso['descripcion']), ENT_QUOTES, "UTF-8"); ?></td>
                                     <td class="text-center">
                                         <div class="btn-group" role="group" aria-label="Basic example">
-                                            <a href="<?php echo htmlspecialchars((string)(RUTA_URL), ENT_QUOTES, "UTF-8"); ?>/permissions/<?php echo htmlspecialchars((string)($permiso['id']), ENT_QUOTES, "UTF-8"); ?>/edit"
+                                            <a href="<?php echo htmlspecialchars((string)(RUTA_URL), ENT_QUOTES, "UTF-8"); ?>/permisos/<?php echo htmlspecialchars((string)($permiso['id']), ENT_QUOTES, "UTF-8"); ?>/edit"
                                                 type="button" class="btn btn-success btn-sm" title="Editar Permiso"><i
                                                     class="fa-solid fa-pencil"></i></a>
                                             <button type="button" class="btn btn-danger btn-sm"
@@ -99,7 +99,7 @@
                 // 2. Si el usuario confirma, enviamos la petición vía Fetch (AJAX)
                 if (result.isConfirmed) {
                     // Reemplaza esta URL por la ruta real que apunte a tu método destroy
-                    fetch(`${base_url}/permissions/${idPermiso}/delete`, {
+                    fetch(`${base_url}/permisos/${idPermiso}/delete`, {
                             method: 'POST', // O 'DELETE' según manejes tus rutas en PHP puro
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest'
