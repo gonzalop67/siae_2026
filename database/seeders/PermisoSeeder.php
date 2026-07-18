@@ -35,7 +35,8 @@ class PermisoSeeder
             ['id' => 17, 'nombre' => 'Listar Niveles Académicos', 'slug' => 'listar-niveles-academicos', 'descripcion' => 'Permite ver el menú para el crud de niveles académicos.'],
             ['id' => 18, 'nombre' => 'Listar Subniveles Académicos', 'slug' => 'listar-subniveles-academicos', 'descripcion' => 'Permite ver el menú para el crud de subniveles académicos.'],
             ['id' => 19, 'nombre' => 'Listar Cursos', 'slug' => 'listar-cursos', 'descripcion' => 'Permite ver el menú para el crud de cursos.'],
-            ['id' => 20, 'nombre' => 'Listar Asignaturas', 'slug' => 'listar-asignaturas', 'descripcion' => 'Permite ver el menú para el crud de asignaturas'],
+            ['id' => 20, 'nombre' => 'Listar Asignaturas', 'slug' => 'listar-asignaturas', 'descripcion' => 'Permite ver el menú para el crud de asignaturas.'],
+            ['id' => 21, 'nombre' => 'Definición de Periodos Académicos', 'slug' => 'definicion-de-periodos-academicos', 'descripcion' => 'Permite ver el menú para la interfaz de definición de los periodos académicos.'],
         ];
 
         echo "    -> Insertando permisos base en la tabla [{$tabla}]...\n";

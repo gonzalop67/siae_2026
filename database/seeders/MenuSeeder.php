@@ -31,7 +31,8 @@ class MenuSeeder
             ['id' => 8, 'nombre' => 'Niveles', 'url' => 'niveles', 'icono' => null, 'permiso_slug' => 'listar-niveles-academicos', 'padre_id' => 3, 'orden' => 1],
             ['id' => 9, 'nombre' => 'Subniveles', 'url' => 'subniveles', 'icono' => null, 'permiso_slug' => 'listar-subniveles-academicos', 'padre_id' => 3, 'orden' => 2],
             ['id' => 10, 'nombre' => 'Cursos', 'url' => 'cursos', 'icono' => null, 'permiso_slug' => 'listar-cursos', 'padre_id' => 3, 'orden' => 3],
-            ['id' => 11, 'nombre' => 'Asignaturas', 'url' => 'asignaturas', 'icono' => null, 'permiso_slug' => 'listar-asignaturas', 'padre_id' => 3, 'orden' => 4]
+            ['id' => 11, 'nombre' => 'Asignaturas', 'url' => 'asignaturas', 'icono' => null, 'permiso_slug' => 'listar-asignaturas', 'padre_id' => 3, 'orden' => 4],
+            ['id' => 12, 'nombre' => 'Periodos', 'url' => 'configuracion/periodos', 'icono' => null, 'permiso_slug' => 'definicion-de-periodos-academicos', 'padre_id' => 3, 'orden' => 5]
         ];
 
         echo "    -> Insertando menús base en la tabla [{$tabla}]...\n";

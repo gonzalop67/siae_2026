@@ -6,6 +6,7 @@ use App\Controllers\Admin\AdminDashboardController;
 use App\Controllers\Admin\AreaController;
 use App\Controllers\Admin\AsignaturaController;
 use App\Controllers\Admin\CursoController;
+use App\Controllers\Admin\DefinicionesController;
 use App\Controllers\Admin\MenuController;
 use App\Controllers\Admin\NivelController;
 use App\Controllers\Admin\PermisoController;
@@ -123,6 +124,29 @@ Route::get('asignaturas', [AsignaturaController::class, 'index'], [$authMiddlewa
 Route::post('asignaturas', [AsignaturaController::class, 'store'], [$authMiddleware]);         // Crear
 Route::post('asignaturas/:id/update', [AsignaturaController::class, 'update'], [$authMiddleware]); // Actualizar (vía POST)
 Route::post('asignaturas/:id/delete', [AsignaturaController::class, 'delete'], [$authMiddleware]); // Eliminar (vía POST)
+
+// Vista principal del panel
+Route::get('configuracion/periodos', [DefinicionesController::class, 'index']);
+
+// APIs de carga en cascada (Devuelven arrays/objetos interpretados por tu Dispatcher como JSON)
+Route::get('api/lectivos', [DefinicionesController::class, 'getLectivos']);
+Route::get('api/periodos-academicos/:id', [DefinicionesController::class, 'getAcademicosPorLectivo']);
+Route::get('api/parciales/:id', [DefinicionesController::class, 'getParcialesPorAcademico']);
+
+// Procesamiento de formularios via POST
+Route::post('configuracion/periodos/guardar-lectivo', [DefinicionesController::class, 'storeLectivo']);
+Route::post('configuracion/periodos/guardar-academico', [DefinicionesController::class, 'storeAcademico']);
+Route::post('configuracion/periodos/guardar-parcial', [DefinicionesController::class, 'storeParcial']);
+
+// Rutas para modificaciones
+Route::post('configuracion/periodos/editar-lectivo/:id', [DefinicionesController::class, 'updateLectivo']);
+Route::post('configuracion/periodos/editar-academico/:id', [DefinicionesController::class, 'updateAcademico']);
+Route::post('configuracion/periodos/editar-parcial/:id', [DefinicionesController::class, 'updateParcial']);
+
+// Rutas para Eliminaciones
+Route::post('configuracion/periodos/eliminar-lectivo/:id', [DefinicionesController::class, 'destroyLectivo']);
+Route::post('configuracion/periodos/eliminar-academico/:id', [DefinicionesController::class, 'destroyAcademico']);
+Route::post('configuracion/periodos/eliminar-parcial/:id', [DefinicionesController::class, 'destroyParcial']);
 
 // Despachador global de la aplicación
 Route::dispatch();
