@@ -20,6 +20,7 @@ class RolSeeder
             ['nombre' => 'Coordinador',   'slug' => 'coordinador',   'descripcion' => 'Gestión y supervisión de ofertas educativas y asignaciones.'],
             ['nombre' => 'Docente',       'slug' => 'docente',       'descripcion' => 'Registro de calificaciones, asistencias y rúbricas.'],
             ['nombre' => 'Estudiante',    'slug' => 'estudiante',    'descripcion' => 'Consulta de historial académico y perfiles.'],
+            ['nombre' => 'Representante', 'slug' => 'representante', 'descripcion' => 'Consulta de historial académico de sus representados.'],
             ['nombre' => 'Secretaría',    'slug' => 'secretaria',    'descripcion' => 'Acceso a Matriculación y Reportes.'],
             ['nombre' => 'Tutor',         'slug' => 'tutor',         'descripcion' => 'Acceso a reportes de calificaciones y comportamiento.'],
         ];

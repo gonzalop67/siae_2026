@@ -55,6 +55,11 @@ class Model
         return $this->table;
     }
 
+    public function getConnection(): \mysqli
+    {
+        return $this->connection;
+    }
+
     /**
      * Obtiene el último ID autoincremental generado en la base de datos.
      * 

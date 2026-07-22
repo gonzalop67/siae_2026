@@ -37,6 +37,10 @@ class DatabaseSeeder
             $mysqli->query("TRUNCATE TABLE `malla_curricular`;");
             $mysqli->query("TRUNCATE TABLE `paralelos`;");
             $mysqli->query("TRUNCATE TABLE `aulas_periodo`;");
+            // 🔥 AGREGAR AQUÍ (NUEVAS TABLAS):
+            $mysqli->query("TRUNCATE TABLE `alumno_representante`;");
+            $mysqli->query("TRUNCATE TABLE `representantes`;");
+            //
             $mysqli->query("TRUNCATE TABLE `alumnos`;");
             $mysqli->query("TRUNCATE TABLE `matriculas`;");
             $mysqli->query("TRUNCATE TABLE `insumos_evaluacion`;");
@@ -56,21 +60,24 @@ class DatabaseSeeder
             NacionalidadSeeder::class,
             PersonaAdminSeeder::class,
             AdminUserSeeder::class,
-            PersonasDocenteSeeder::class, // Puebla personas de prueba antes de AlumnoSeeder
+            PersonasDocenteSeeder::class,
 
             // 🔥 CONFIGURACIÓN ACADÉMICA BASE CENTRALIZADA:
-            EstructuraEducativaSeeder::class, // 1° Inserta Niveles, Subniveles y Cursos en un solo paso limpio
-            AreaSeeder::class,                // 2° Catálogo de materias troncales
-            AsignaturaSeeder::class,          // 3° Catálogo de materias troncales
-            PeriodoLectivoSeeder::class,      // 4° Abre el año escolar y los bloques académicos
-            ParcialEvaluacionSeeder::class,   // 5° Configura los parciales de evaluación
-            TipoEvaluacionSeeder::class,      // 6° Configura las macros formativas/sumativas con parciales
-            MallaCurricularSeeder::class,     // 7° Distribuye horas (Depende de subniveles y asignaturas)
-            ParaleloMaestroSeeder::class,     // 8° Llena catálogo 'paralelos' y la tabla puente
-            AlumnoSeeder::class,              // 9° Vincula personas a la condición de estudiantes
-            MatriculaSeeder::class,           // 10° Sienta formalmente a los alumnos en las aulas creadas
-            InsumosEvaluacionSeeder::class,   // 💡 NUEVO SEEDER AGREGADO AQUÍ
-            CalificacionesEstudiantesSeeder::class, // CALIFICACIONES (Último paso del flujo transaccional)
+            EstructuraEducativaSeeder::class,
+            AreaSeeder::class,
+            AsignaturaSeeder::class,
+            PeriodoLectivoSeeder::class,
+            ParcialEvaluacionSeeder::class,
+            TipoEvaluacionSeeder::class,
+            MallaCurricularSeeder::class,
+            ParaleloMaestroSeeder::class,
+
+            // 🚀 REEMPLAZO AQUÍ (Paso 9):
+            PersonasEstudianteSeeder::class, // Genera personas, alumnos, representantes, usuarios y roles
+
+            MatriculaSeeder::class,
+            InsumosEvaluacionSeeder::class,
+            CalificacionesEstudiantesSeeder::class,
 
             // NÚCLEO SEGURIDAD Y MENÚS:
             PermisoSeeder::class,
